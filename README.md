@@ -1,5 +1,5 @@
 
-## Manipulate and visualize variant call format (vcf) data
+## R pacakge to manipulate and visualize variant call format (vcf) data
 
 VcfR: tools to read, write, parse and visualize [vcf](https://github.com/samtools/hts-specs) data.
 
