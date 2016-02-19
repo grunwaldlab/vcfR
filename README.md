@@ -1,5 +1,5 @@
 
-## Manipulate and visualize variant call format (vcf) data
+## R package to manipulate and visualize variant call format (vcf) data
 
 VcfR: tools to read, write, parse and visualize [vcf](https://github.com/samtools/hts-specs) data.
 
@@ -9,7 +9,7 @@ VcfR: tools to read, write, parse and visualize [vcf](https://github.com/samtool
 
 vcfR is an R package intended to allow easy manipulation and visualization of variant call format (vcf) data.
 Functions are provided to rapidly read from and write to vcf files.
-Once data are read into memory they can be stored in either of two data structures.
+Once data are read into memory they can be stored in either of two data structures:
 
 *vcfR* - S4 class to contain a vcf file as well as functions to load this object.
 
@@ -17,11 +17,8 @@ Once data are read into memory they can be stored in either of two data structur
 
 Additional functions provide tha ability to subset vcf data as well as to extract and parse subsets of the data.
 For example, individual genotypes, sequence depths or genotype likelihoods (when provided in the file) can easily be accessed.
-These tools are provided to aid researchers in rapidly surveying the quality and other characteristics of data provided as vcf data.
+These tools are provided to aid researchers in rapidly surveying the quality and other basic metrics of data provided as vcf data.
 With this information in hand, researchers should be able to determine criteria for hard filtering in order to attempt to maximize biological variation and minimize technical variation.
-
-
-
 
 ## Download
 
