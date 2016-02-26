@@ -64,7 +64,7 @@ And to build the vignettes:
 
 A pre-print has been submitted:
 
-BJ Knaus and NJ Grünwald. 2016. VcfR: an R package to manipulate and visualize VCF format data. bioRxiv doi: http://dx.doi.org/10.1101/041277
+BJ Knaus and NJ Grünwald. 2016. VcfR: an R package to manipulate and visualize VCF format data. bioRxiv doi: http://dx.doi.org/10.1101/041277 
 
 ------
 
