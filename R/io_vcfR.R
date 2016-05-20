@@ -1,6 +1,7 @@
-
 #' @title Read and write vcf format files
 #' @rdname io_vcfR
+#' @name VCF input and output
+#' 
 #' @export
 #'
 #' @description
@@ -27,13 +28,22 @@
 #' The user may increase this limit to any value, but is encourages to compare that value to the amout of available physical memory.
 #' 
 #' 
+#' It is possible to input part of a VCF file by using the parameters nrows, skip and cols.
+#' The first eight columns (the fix region) are part of the definition and will always be included.
+#' Any columns beyond eight are optional (the gt region).
+#' You can specify which of these columns you would like to input by setting the cols parameter.
+#' If you want a usable vcfR object you will want to always include nine (the FORMAT column).
+#' If you do not include column nine you may experience reduced functionality.
+#' 
+#' 
 #' The function \strong{write.vcf} takes an object of either class vcfR or chromR and writes the vcf data to a vcf.gz file (gzipped text).
 #' If the parameter 'mask' is set to FALSE, the entire object is written to file.
 #' If the parameter 'mask' is set to TRUE and the object is of class chromR (which has a mask slot), this mask is used to subset the data.
 #' If an index is supplied as 'mask', then this index is used, and recycled as necessary, to subset the data.
 #' 
 #' @return read.vcfR returns an object of class \code{\link{vcfR-class}}.
-#' See the \strong{vignette:} \code{vignette('vcf_data')}
+#' See the \strong{vignette:} \code{vignette('vcf_data')}.
+#' The function write.vcf creates a gzipped VCF file.
 #'
 #' @seealso
 # \code{\link[PopGenome]{readVCF}}
@@ -50,6 +60,20 @@
 #'
 #' Use: browseVignettes('vcfR') to find examples.
 #'
+#'
+#' @examples 
+#' data(vcfR_test)
+#' vcfR_test
+#' head(vcfR_test)
+#' # CRAN requires developers to us a tempdir when writing to the filesystem.
+#' # You may want to implement this example elsewhere.
+#' orig_dir <- getwd()
+#' temp_dir <- tempdir()
+#' setwd( temp_dir )
+#' write.vcf( vcfR_test, file = "vcfR_test.vcf.gz" )
+#' vcf <- read.vcfR( file = "vcfR_test.vcf.gz", verbose = FALSE )
+#' vcf
+#' setwd( orig_dir )
 #' 
 #' 
 #' @rdname io_vcfR
@@ -58,6 +82,9 @@
 #' 
 read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, verbose = TRUE){
 #  require(memuse)
+  
+  # gzopen does not appear to deal well with tilde expansion.
+  file <- path.expand(file)
   
   if(file.access(file, mode = 0) != 0){
     stop(paste("File:", file, "does not appear to exist!"))
@@ -73,7 +100,7 @@ read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, verbos
     cols <- 1:stats['columns']
   }
   # Make sure we include the first nine columns.
-  cols <- sort( unique( c(1:9, cols) ) )
+  cols <- sort( unique( c(1:8, cols) ) )
 
   
 #  ram_est <- stats['variants'] * stats['columns'] * 8 + 248
@@ -91,7 +118,11 @@ read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, verbos
                 nrows = nrows, skip = skip, cols = cols, as.numeric(verbose))
 
   vcf@fix <- body[ ,1:8, drop=FALSE ]
-  vcf@gt <- body[ ,9:ncol(body), drop=FALSE ]
+  if( ncol(body) > 8 ){
+    vcf@gt <- body[ , -c(1:8), drop=FALSE ]
+  } else {
+    vcf@gt <- matrix("a", nrow=0, ncol=0)
+  }
   
   return(vcf)
 }
@@ -105,11 +136,11 @@ read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, verbos
 #' 
 write.vcf <- function(x, file = "", mask = FALSE, APPEND = FALSE){
   if(class(x) == "chromR"){
-    filter <- x@var.info$mask
-#    x <- chrom_to_vcfR(x)
+    if( mask == TRUE ){
+      is.na( x@vcf@fix[,'FILTER'] ) <- TRUE
+      x@vcf@fix[,'FILTER'][ x@var.info[,'mask'] ] <- 'PASS'
+    }
     x <- x@vcf
-#    x@fix$FILTER[filter] <- "PASS"
-    x@fix[,'FILTER'] <- "PASS"
   }
   if(class(x) != "vcfR"){
     stop("Unexpected class! Expecting an object of class vcfR or chromR.")
@@ -127,10 +158,8 @@ write.vcf <- function(x, file = "", mask = FALSE, APPEND = FALSE){
   
   if(mask == FALSE){
     test <- .Call('vcfR_write_vcf_body', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 0)
-#    test <- .Call('vcfR_write_vcf_body_gz', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 0)
   } else if (mask == TRUE){
     test <- .Call('vcfR_write_vcf_body', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 1)
-#    test <- .Call('vcfR_write_vcf_body_gz', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 1)
   }
 }
 

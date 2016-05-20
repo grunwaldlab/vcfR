@@ -6,6 +6,8 @@
 #' @export
 #' @aliases chromo
 #' 
+#' @description plot chromR objects
+#' 
 #' @param chrom an object of class chrom.
 #' @param boxp logical specifying whether marginal boxplots should be plotted [T/F].
 #' @param dp.alpha degree of transparency applied to points in dot plots [0-255].
@@ -26,6 +28,7 @@
 #' For example, transparency may be desired in the dot plot but not the box and whisker plot.
 #' When one (or more) of these elements is omitted an attempt to use default values is made.
 #' 
+#' @return Returns an invisible NULL.
 #' 
 #' 
 #' @seealso \code{\link{dr.plot}}
@@ -48,6 +51,11 @@ chromo <- function( chrom,
     stop("Expecting object of class chromR")
   }
   
+  # Test to see if the mask is populated.
+#  if( length(grep('mask', colnames(chrom@var.info))) < 1 ){
+#    chrom@var.info$mask <- rep( TRUE, times=nrow(chrom@vcf@fix) )
+#  }
+  
   # Save original parameters.
   orig.oma <- graphics::par('oma')
   orig.mar <- graphics::par('mar')
@@ -66,7 +74,8 @@ chromo <- function( chrom,
   ##### ##### ##### ##### #####
   
   # Plot title
-  if( length(chrom@name) > 0 ){
+#  if( length(chrom@name) > 0 ){
+  if( length(chrom@names) > 0 ){
     graphics::par( oma = c(3,0,1,0) )
   } else {
     graphics::par( oma = c(3,0,0,0) )
@@ -307,10 +316,32 @@ chromo <- function( chrom,
     }
     
     # Sequence plot.
-    rmat1 <- cbind(chrom@seq.info$nuc.win[,1], -1, chrom@seq.info$nuc.win[,2], 1)
-    rmat2 <- cbind(chrom@seq.info$N.win[,1], -0.5, chrom@seq.info$N.win[,2], 0.5)
+    if( nrow(chrom@seq.info$nuc.win) > 0 ){
+      rmat1 <- cbind(chrom@seq.info$nuc.win[,1], -1, chrom@seq.info$nuc.win[,2], 1)
+    } else {
+      rmat1 <- NULL
+    }
+    if( nrow(chrom@seq.info$N.win) > 0 ){
+      rmat2 <- cbind(chrom@seq.info$N.win[,1], -0.5, chrom@seq.info$N.win[,2], 0.5)
+    } else {
+      rmat2 <- NULL
+    }
     graphics::par( mar = c(0,4,0,0) )
-    dr.plot( rlst = list( rmat1, rmat2 ), chrom.s = 1, chrom.e = chrom@len,
+    
+    # Create a list from the sequence data.
+    if( !is.null(rmat1) & !is.null(rmat2) ){
+      rlist <- list( rmat1, rmat2 )
+    }
+    if( !is.null(rmat1) & is.null(rmat2) ){
+      rlist <- list( rmat1 )
+    }
+    if( is.null(rmat1) & !is.null(rmat2) ){
+      rlist <- list( rmat2 )
+    }
+    if( is.null(rmat1) & is.null(rmat2) ){
+      rlist <- NULL
+    }
+    dr.plot( rlst = rlist, chrom.s = 1, chrom.e = chrom@len,
                     title = "Nucleotides", hline = NULL,
                     dcol = NULL,
                     rcol  = c('green', 'red'),
@@ -348,8 +379,10 @@ chromo <- function( chrom,
   }
 
   graphics::title( xlab = "Base pairs", line = 1.6, outer = TRUE )
-  if( length(chrom@name) > 0 ){
-    graphics::title( main = chrom@name, line = 0.2, outer = TRUE )
+#  if( length(chrom@name) > 0 ){
+  if( length(chrom@names) > 0 ){
+    graphics::title( main = chrom@names, line = 0.2, outer = TRUE )
+#    graphics::title( main = chrom@name, line = 0.2, outer = TRUE )
   }
 
   
@@ -362,6 +395,8 @@ chromo <- function( chrom,
   graphics::par( mar = orig.mar )
   graphics::par( oma = orig.oma )
   graphics::par( mfrow = c(1,1) )
+  
+  invisible(NULL)
 }
 
 ##### ##### ##### ##### #####
@@ -397,11 +432,15 @@ chromoqc <- function( chrom,
   )
 
   # Mapping Quality (MQ)
-  myList2 <- list(title = "Mapping Quality (MQ)",
-                  dmat  = chrom@var.info[ chrom@var.info[,"mask"] , c("POS","MQ") ],
-                  dcol  = grDevices::rgb( red=46, green=139, blue=87, alpha=dp.alpha, maxColorValue = 255),
-                  bwcol = grDevices::rgb( red=46, green=139, blue=87, maxColorValue = 255)
-  )
+  if( !is.null(chrom@var.info$MQ) ){
+    myList2 <- list(title = "Mapping Quality (MQ)",
+                    dmat  = chrom@var.info[ chrom@var.info[,"mask"] , c("POS","MQ") ],
+                    dcol  = grDevices::rgb( red=46, green=139, blue=87, alpha=dp.alpha, maxColorValue = 255),
+                    bwcol = grDevices::rgb( red=46, green=139, blue=87, maxColorValue = 255)
+    )
+  } else {
+    myList2 <- NULL
+  }
   
   # Phred-Scaled Quality (QUAL)
   dmat <- as.matrix( cbind(chrom@var.info[,"POS"], 
@@ -430,31 +469,6 @@ chromoqc <- function( chrom,
 ##### ##### ##### ##### #####
 
 
-
-
-# ' @rdname chromo_plot
-# ' @export
-# ' @aliases chromoqc
-# '
-#chromohwe <- function(chrom, ...){
-#  stop("Function not implemented.")
-#}
-
-# ' @rdname chromo_plot
-# ' @export
-# ' @aliases chromodot
-# '
-#chromodot <- function( chrom, ...){
-#  message("Function not implemented.")
-#}
-
-# ' @rdname chromo_plot
-# ' @export
-# ' @aliases chromopop
-# '
-#chromopop <- function( chrom, ...){
-#  stop("Function not implemented.")
-#}
 
 ##### ##### ##### ##### #####
 # EOF.

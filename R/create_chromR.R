@@ -1,4 +1,6 @@
 #' @title Create chromR object
+#' 
+#' 
 #' @name create.chromR
 #' @rdname create_chromR
 #' @export
@@ -7,12 +9,12 @@
 #' @description
 #' Creates and populates an object of class chromR.
 #'
+#' @param vcf an object of class vcfR
 #' @param name a name for the chromosome (for plotting purposes)
 #' @param seq a sequence as a DNAbin object
 #' @param ann an annotation file (gff-like)
 #' @param verbose should verbose output be printed to the console?
 #' @param x an object of class chromR
-#' @param vcf an object of class vcfR
 #' @param gff a data.frame containing annotation data in the gff format
 # @param ... arguments
 #'
@@ -81,13 +83,14 @@
 # hist(tab$Ho - tab$He, col=5)
 # # Note that this example is a mitochondrion, so this is a bit silly.
 #' 
-create.chromR <- function(name="CHROM1", vcf, seq=NULL, ann=NULL, verbose=TRUE){
+create.chromR <- function(vcf, name="CHROM1", seq=NULL, ann=NULL, verbose=TRUE){
   # Determine whether we received the expected classes.
   stopifnot(class(vcf) == "vcfR")
 
   # Initialize chromR object.  
   x <- new(Class="chromR")
-  setName(x) <- name
+  names(x) <- name
+#  setName(x) <- name
   
   # Insert vcf into Chom.
   if(length(vcf)>0){
@@ -118,6 +121,14 @@ create.chromR <- function(name="CHROM1", vcf, seq=NULL, ann=NULL, verbose=TRUE){
     if(class(ann[,4]) == "character"){ann[,4] <- as.numeric(ann[,4])}
     if(class(ann[,5]) == "character"){ann[,5] <- as.numeric(ann[,5])}
     x@ann <- ann
+    
+    # Manage length
+    if( max(as.integer(as.character(ann[,4]))) > x@len ){
+      x@len <- max(as.integer(as.character(ann[,4])))
+    }
+    if( max(as.integer(as.character(ann[,5]))) > x@len ){
+      x@len <- max(as.integer(as.character(ann[,5])))
+    }
   }
 
   # Report names of objects to user.
@@ -194,7 +205,9 @@ create.chromR <- function(name="CHROM1", vcf, seq=NULL, ann=NULL, verbose=TRUE){
 
 #' @rdname create_chromR
 #' @export
-#' @aliases chromR-methods vcf2chromR
+#' @aliases vcf2chromR
+# @aliases chromR-methods vcf2chromR
+#' 
 #'
 # @description
 # Methods to work with objects of the chromR class
@@ -249,7 +262,10 @@ seq2chromR <- function(x, seq=NULL){
   # multiple sequences, but as a matrix when the fasta
   # only contains one sequence.
   if(is.list(seq)){
-    stopifnot(length(seq)==1)
+    #stopifnot(length(seq)==1)
+    if( length(seq) != 1 ){
+      stop("seq2chromR expects a DNAbin object with only one sequence in it.")
+    }
     x@seq <- as.matrix(seq)
     x@len <- length(x@seq)
   } else if (is.matrix(seq)){

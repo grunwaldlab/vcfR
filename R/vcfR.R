@@ -9,7 +9,7 @@
 #' 
 #' \strong{File input and output} is facilitated with the functions \code{\link{read.vcfR}} and \code{\link{write.vcf}}.
 #' Input of vcf format data results in an S4 object of class \code{\link{vcfR-class}}.
-#' Objects of class vcfR can be manipulated with \code{\link{vcfR-methods}} and \code{\link{extract.gt}}.
+#' Objects of class vcfR can be manipulated with \code{\link{vcfR-method}} and \code{\link{extract.gt}}.
 #' Contents of the vcfR object can be visualized with the \code{\link{plot.vcfR}} method.
 #' More complex visualizations can be created using a series of functions.
 #' See \code{vignette(topic="sequence_coverage")} for an example.
@@ -33,12 +33,16 @@
 #   N-NN. \url{http://www.someurl.org/v40/i03/}.
 #' 
 #' 
+#' @import pinfsc50
 #' @import ape
 #' @docType package
 #' @name vcfR
 #' @rdname vcfR
 #' @useDynLib vcfR
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats setNames
+#' 
+#' 
 NULL
 
 

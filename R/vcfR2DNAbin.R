@@ -139,29 +139,9 @@ vcfR2DNAbin <- function( x, extract.indels = TRUE , consensus = FALSE,
     }
   }
 
-  
-  
-
-  
-  # The only reason to NOT extract haplotypes is if
-  # consensus = TRUE
-#  if( extract.haps == TRUE ){
-#    x <- extract.haps( x, gt.split = gt.split, verbose = verbose )
-#  }
-  
-  # Determine if extract.haps returned something successfully.
-  # nrow of x could be because x had no variants,
-  # or because gt.split was not properly specified.
-#  if( nrow(x) == 0 ){
-#    warning( paste('extract.haps returned nrow = 0, gt.split = ', gt.split, '. Does this seem appropriate?', sep="") )
-#  }
-  
 
   # Data could be haploid, diploid or higher ploid.
-  
-  
-  
-  
+
   # x should be a matrix of variants by here.
   
   # Return full sequence when ref.seq is not NULL
@@ -186,14 +166,17 @@ vcfR2DNAbin <- function( x, extract.indels = TRUE , consensus = FALSE,
     # First we remove variants above the region.
     # Then we remove variants below this region.
     # Then we rescale the region to be one-based.
-    variants <- variants[ pos <= start.pos + dim(ref.seq)[2], ]
-    pos <- pos[ pos <= start.pos + dim(ref.seq)[2] ]    
+    variants <- variants[ pos < start.pos + dim(ref.seq)[2], ]
+    pos <- pos[ pos < start.pos + dim(ref.seq)[2] ]    
     variants <- variants[ pos >= start.pos, ]
     pos <- pos[ pos >= start.pos ]
     pos <- pos - start.pos + 1
     x[pos,] <- variants
   }
-  
+
+  # Convert NA to n
+  x[ is.na(x) ] <- 'n'
+
   # DNAbin characters must be lower case.
   # tolower requires dim(X) to be positive.
   if( nrow(x) > 0 ){
@@ -207,14 +190,7 @@ vcfR2DNAbin <- function( x, extract.indels = TRUE , consensus = FALSE,
   return(x)
 }
 
-  
-  
-  
-  
-  
-  
-  
-  
+
 vcfR2DNAbin1 <- function( x, extract.indels = TRUE , consensus = TRUE,
                            extract.haps = FALSE, gt.split="|",
                            ref.seq = NULL, start.pos = NULL,
@@ -281,20 +257,11 @@ vcfR2DNAbin1 <- function( x, extract.indels = TRUE , consensus = TRUE,
   } else {
     stop( "Invalid specification of extract.haps.\nShould be a logical." )
   }
-  
-  # If we have no variants (rows) return NA.
-#  if( nrow(x) < 1 )
-#  {
-#    return( NA )
-#  }
 
   # Strategies to convert genotypes (with a delimiter) to nucleotides.
   # If extract.haps was set to TRUE, then our data is effectively haploid now.
   ploid <- length(unlist( strsplit( x[!is.na(x)][1], split=gt.split, fixed=TRUE ) ))
-  
-#  if( verbose == TRUE ){
-#    message( paste("Ploidy detected to be:", ploid) )
-#  }
+
   
   if( ploid == 1 ){
     # Haploid case

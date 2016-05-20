@@ -1,16 +1,14 @@
-
-# Heatmap.bp tests.
-
 # detach(package:vcfR, unload=T)
-library(vcfR)
-context("heatmap.bp functions")
-
 #library(testthat)
-#data(vcfR_example)
+library(vcfR)
 
-x  <- as.matrix(mtcars)
+context("heatmap.bp function")
 
-test_that("we can create null a Chrom",{
-#  heatmap.bp(x)
-#  heatmap.bp(x, scale="col")
+#data("vcfR_example")
+
+test_that("heatmap.bp works",{
+  tmp <- matrix( rnorm(100,1,10), ncol=10, nrow=10)
+  test <- heatmap.bp(tmp)
+  expect_equal(test, NULL)
 })
+

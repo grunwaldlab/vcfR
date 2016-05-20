@@ -5,6 +5,8 @@
 library(vcfR)
 context("create.chromR functions")
 
+data("vcfR_example")
+
 #library(testthat)
 #data(vcfR_example)
 
@@ -22,7 +24,7 @@ test_that("Create a null chromR",{
   expect_equal(nrow(chrom@ann), 0)
 })
 
-data("vcfR_example")
+
 
 #vcf_file <- system.file("extdata", "pinf_sc1_100_sub.vcf.gz", package = "vcfR")
 #seq_file <- system.file("extdata", "pinf_sc100.fasta", package = "vcfR")
@@ -84,6 +86,14 @@ test_that("We can create a chromR, no sequence",{
 })
 
 
+test_that("We can create a chromR, no sequence, annotation greater than vcf POS",{
+  gff2 <- gff
+  gff2[23,5] <- 100000
+  chrom <- create.chromR(name="Supercontig_1.50", vcf=vcf, ann=gff2, verbose=FALSE)
+  expect_equal( chrom@len, 100000)
+})
+
+
 test_that("We can create a chromR",{
   chrom <- create.chromR(name="Supercontig_1.50", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
   expect_is(chrom, "chromR")
@@ -101,7 +111,17 @@ test_that("We can create a chromR",{
 
 
 ##### ##### ##### ##### #####
+# seq2chromR
 
+#test_that("seq2chromR works",{
+#
+#})
+
+
+
+
+##### ##### ##### ##### #####
+# masker
 
 chrom <- create.chromR(name="Supercontig_1.50", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
 chrom <- masker(chrom, min_DP = 300, max_DP = 700)
@@ -112,15 +132,75 @@ test_that("We implemented the mask",{
 
 
 
-chrom <- proc.chromR(chrom, verbose = FALSE)
+##### ##### ##### ##### #####
+# proc.chromR
+
 
 test_that("proc.chromR works",{
+  chrom <- proc.chromR(chrom, verbose = FALSE)
+  
   expect_true( ncol(chrom@var.info) >= 3 )
   chrom <- proc.chromR(chrom, verbose = FALSE)
   expect_true( ncol(chrom@var.info) >= 3 )
 })
 
 
+##### ##### ##### ##### #####
+# seq2rects
+
+data("vcfR_example")
+chrom <- create.chromR(name="Supercontig_1.50", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+
+
+test_that("seq2rects works for test data",{
+  rects1 <- seq2rects(chrom)
+  
+  expect_is( rects1, "matrix" )
+  expect_true( nrow(rects1) > 0 )
+})
+
+
+test_that("seq2rects works with ns",{
+  rects2 <- seq2rects(chrom, chars="n")
+  
+  expect_is( rects2, "matrix" )
+  expect_true( nrow(rects2) > 0 )
+})
+
+
+test_that("seq2rects works when seq has no Ns",{
+  # Replace n with a.
+  seq2 <- as.character( chrom@seq )
+  seq2[ seq2 == 'n' ] <- 'a'
+  chrom@seq <- ape::as.DNAbin(seq2)
+  
+  rects2 <- seq2rects(chrom, chars="n")
+  
+  expect_is( rects2, "matrix" )
+  expect_true( nrow(rects2) == 0 )
+})
+
+
+##### ##### ##### ##### #####
+# regex.win
+
+
+
+
+
+
+##### ##### ##### ##### #####
+# chromR2vcfR
+
+test_that("chromR2vcfR works",{
+  chrom <- create.chromR(name="Supercontig_1.50", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+  chrom <- masker(chrom, min_DP = 300, max_DP = 700)
+  
+  test <- chromR2vcfR(chrom, use.mask = TRUE)
+
+  sum(chrom@var.info$mask)
+nrow(test)
+})
 
 ##### ##### ##### ##### #####
 # EOF.

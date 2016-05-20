@@ -17,9 +17,31 @@ test_file("testthat/test_io.R")
 #
 test_file("testthat/test_conversion.R")
 #
-#test_file("testthat/test_chromo_plot.R")
-
 test_file("testthat/test_vcfR_methods.R")
+#
+test_file("testthat/test_addID.R")
+#
+test_file("testthat/test_maf.R")
+#
+test_file("testthat/test_genotype_matrix_functions.R")
+#
+test_file("testthat/test_vcfRtidy.R")
+#
+test_file("testthat/test_heatmapbp.R")
+#
+test_file("testthat/test_ad_frequency.R")
+#test_file("testthat/test_chromR_method.R")
+
+
+# This test will write the plots to a file on the filesystem.
+# This should cause CRAN to complain.
+# Comment out this test prior to CRAN submission.
+#
+#
+test_file("testthat/test_chromo_plot.R")
+#
+test_file("testthat/test_drplot.R")
+
 
 
 #test_file("testthat/test_rank_variants.R")
@@ -29,7 +51,7 @@ test_file("testthat/test_vcfR_methods.R")
 
 
 ##### ##### ##### ##### #####
-# Debugging compiled code.
+# Notes on debugging compiled code.
 
 # lldg gdb
 # http://kevinushey.github.io/blog/2015/04/13/debugging-with-lldb/

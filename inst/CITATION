@@ -1,18 +1,31 @@
 bibentry("Article",
-   title = "vcf.R: A package for visualizing and processing variant call format (VCF) files.",
-   author = person("Brian J. Knaus"),
-   journal = "In prep",
-   organization = "USDA ARS",
-   address      = "Corvallis, OR, USA",
-   year   = version$year,
+   title = "Vcf{R}: a package to manipulate and visualize {VCF} format data in R",
+   author = personList(as.person("Brian J. Knaus"),
+                       as.person('Niklaus J. Gr{\\"u}nwald')),
+   journal = 'Molecular Ecology Resources',
+   year   = "Accepted pending minor revisions",
    note   = "{ISBN} N-NNNNNN-NN-N",
-   url    = "http://brianknaus.com/",
+   url    = "http://dx.doi.org/10.1101/041277",
 
-   mheader = "To cite R in publications use:",
+   mheader = "To cite vcfR in publications use:",
 
    mfooter = 
-     paste("We have invested a lot of time and effort in creating R,",
-      "please cite it when using it for data analysis.",
-      "See also", sQuote("citation(\"pkgname\")"),
-      "for citing R packages.", sep = " ")
+     paste("We have invested a lot of time and effort in creating vcfR,",
+      "please cite it when using it for data analysis.")
+)
+
+
+bibentry("Article",
+   title = "Vcf{R}: an R package to manipulate and visualize {VCF} format data",
+   author = personList(as.person("Brian J. Knaus"),
+                       as.person('Niklaus J. Gr{\\"u}nwald')),
+   journal = 'BioRxiv',
+   year   = 2016,
+   url    = "http://dx.doi.org/10.1101/041277",
+
+   mheader = "To cite vcfR in publications use:",
+
+   mfooter = 
+     paste("We have invested a lot of time and effort in creating vcfR,",
+      "please cite it when using it for data analysis.")
 )
