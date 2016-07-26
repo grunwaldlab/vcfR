@@ -1,7 +1,15 @@
 
+# vcfR 1.2.0
+Released on CRAN 2016-07-25.
+
+* `vcfR2genind()` greps genotypes containing a missing allele ('.') and sets to NA.
+* dplyr v0.5.0 broke some vcfR2tidy functionality. This functionality should be fixed in this release.
+* `is_het()` rapidly identifies heterozygotes.
+* `extract.info()` scores missing elements as NA.
+
 
 # vcfR 1.1.0
-Submitted to CRAN 2016-05-25.
+Released on CRAN 2016-05-26.
 
 This release includes the incorporation of suggestions made by reviewers of the manuscript submitted to Molecular Ecology Resources.
 
@@ -23,6 +31,7 @@ This release includes the incorporation of suggestions made by reviewers of the 
 * `create.chromR()` now handles instances with no seq and the annotation position exceeds the greatest VCF POS.
 * `read.vcfR()` now handles tilde expansion.
 * `addID()` populates the non-missing values in the ID column of VCF data by concatenating the chromosome and position. 
+
 
 # vcfR 1.0.0
 Released on CRAN 2016-02-22.

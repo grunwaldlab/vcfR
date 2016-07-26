@@ -2,10 +2,17 @@
 ## VcfR: a package to manipulate and visualize [VCF](https://github.com/samtools/hts-specs) data in R
 
 
-[![Travis-CI Build Status](https://travis-ci.org/knausb/vcfR.png?branch=master)](https://travis-ci.org/knausb/vcfR)
-[![Coverage Status](https://coveralls.io/repos/github/knausb/vcfR/badge.svg?branch=master)](https://coveralls.io/github/knausb/vcfR?branch=master)
+On CRAN:
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vcfR)](https://cran.r-project.org/package=vcfR)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/vcfR)](https://cran.r-project.org/package=vcfR)
+
+Travis-CI:
+[![Travis-CI Build Status](https://travis-ci.org/knausb/vcfR.png?branch=master)](https://travis-ci.org/knausb/vcfR)
+
+Coveralls:
+[![Coverage Status](https://coveralls.io/repos/github/knausb/vcfR/badge.svg?branch=master)](https://coveralls.io/github/knausb/vcfR?branch=master)
+
+*****
 
 
 VcfR is an R package intended to allow easy manipulation and visualization of variant call format (VCF) data.
@@ -32,18 +39,22 @@ With this information in hand, researchers should be able to determine criteria 
 
 ## Publication
 
+Knaus, Brian J., and Niklaus J. Grunwald. In press. VCFR: a package to manipulate and visualize variant call format data in R. Molecular Ecology Resources. http://dx.doi.org/10.1111/1755-0998.12549.
+
 
 Knaus, Brian J., and Niklaus J. Grunwald. 2016. VcfR: an R package to manipulate and visualize VCF format data. bioRxiv: 041277. http://dx.doi.org/10.1101/041277.
 
 
-Accepted pending minor revisions:
-
-Knaus, Brian J., and Niklaus J. Grunwald. 201X. VcfR: a package to manipulate and visualize VCF data in R. Molecular Ecology Resources.
-
-
 ## Download
 
-While this project is in development it can be installed through github:
+[vcfR](https://cran.r-project.org/package=vcfR) is available at CRAN.
+To install use:
+
+    install.packages('vcfR')
+
+
+
+The development vaerion can be installed through github:
 
     devtools::install_github(repo="knausb/vcfR")
     library(vcfR)
@@ -66,9 +77,9 @@ If you've installed this package with devtools you will probably need to run:
 
 ------
 
-## Development version
+## Devel branch
 
-The development version (which may not be stable) can also be installed:
+The devel branch (which may not be stable) can also be installed:
 
     devtools::install_github(repo="knausb/vcfR@devel")
     library(vcfR)
@@ -83,6 +94,7 @@ And to build the vignettes:
 
 ## Software that produce VCF files
 
+
 A fun part of this project has been learning about how people use vcfR.
 One facet of this is learning about the software that create VCF files.
 So I've decided to make a list of these software.
@@ -92,12 +104,13 @@ If you know of a software that I have not included on this list, particularly if
 **Genomic variant callers:**
 
 * [GATK haplotype caller](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php)
+* [GATK MuTect2](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php)
+* [GATK GenotypeGVCFs](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_variantutils_GenotypeGVCFs.php)
 * [freebayes](https://github.com/ekg/freebayes)
 * [Samtools](http://www.htslib.org/)
 * [LoFreq](http://csb5.github.io/lofreq/)
 * [Cortex](http://cortexassembler.sourceforge.net/)
 * [VarScan2](http://dkoboldt.github.io/varscan/)
-
 
 
 **Restriction site associated DNA markers (e.g., RADseq, GBS):**
@@ -106,6 +119,13 @@ If you know of a software that I have not included on this list, particularly if
 * [Stacks](http://catchenlab.life.illinois.edu/stacks/)
 
 
+**Manipulation**
+
+* [VCFtools](https://vcftools.github.io/) General manipulation and analysis.
+* [Beagle v4.1](https://faculty.washington.edu/browning/beagle/beagle.html) Inputs VCF genotypes and outputs phased genotypes to VCF format.
+
+
 ------
 
 Enjoy!
+

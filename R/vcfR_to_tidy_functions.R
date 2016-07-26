@@ -99,6 +99,7 @@ NULL
 #' returns a \code{tbl_df}-ed data frame with column names: "Tag", "ID", "Number","Type",
 #' "Description", "Source", and "Version".
 #' 
+#' @return An object of class tidy::data_frame or a list where every element is of class tidy::data_frame.
 #' 
 #' @note  To run all the examples, you can issue this:
 #' \code{example("vcfR2tidy")}
@@ -111,6 +112,8 @@ NULL
 #' @examples 
 #' # load the data
 #' data(vcfR_example)
+#' 
+#' 
 #' 
 #' 
 #' # extract all the INFO and FORMAT fields into a list of tidy
@@ -147,7 +150,7 @@ NULL
 #'           single_frame = TRUE, 
 #'           info_fields = c("AC", "AN", "MQ"), 
 #'           format_fields = c("GT", "PL"))
-#' 
+#'
 #' 
 #' # note that the "gt_GT_alleles" column is always returned when any
 #' # FORMAT fields are extracted.
@@ -192,6 +195,8 @@ NULL
 #' # get the FORMAT field metadata in a data frame
 #' vcf_field_names(vcf, tag = "FORMAT")
 #' 
+#' 
+#' 
 
 
 
@@ -210,6 +215,10 @@ NULL
 #' its consituent parts will have been parsed into separate columns.
 #' @param ... more options to pass to \code{\link{extract_info_tidy}} and 
 #' \code{\link{extract_gt_tidy}}.  See parameters listed below.
+#' 
+# @importFrom dplyr everything
+# @import dplyr
+#' 
 #' @export
 vcfR2tidy <- function(x, 
                       info_only = FALSE, 
@@ -226,11 +235,15 @@ vcfR2tidy <- function(x,
   unk_parm <- setdiff(
     names(dotslist), 
     c("info_fields", "info_types", "info_sep", "format_fields", "format_types", "dot_is_NA",
-      "alleles", "allele.sep", "gt_column_prepend"))
+      "alleles", "allele.sep", "gt_column_prepend")
+  )
   
-  if(length(unk_parm) > 0) stop("Unknown \"...\" parameters ", 
-                                paste(unk_parm, collapse = " "), 
-                                " to function vcfR2tidy")
+  if(length(unk_parm) > 0){
+    stop("Unknown \"...\" parameters ", 
+        paste(unk_parm, collapse = " "), 
+        " to function vcfR2tidy"
+        )
+  }
   
   info_dots <- dotslist[names(dotslist) %in% c("info_fields", "info_types", "info_sep")]
   info_dots$x = x
@@ -300,11 +313,11 @@ vcfR2tidy <- function(x,
   retfix <- cbind(base, fix) %>%
     dplyr::tbl_df() %>%
     dplyr::mutate_(ChromKey = ~as.integer(factor(CHROM), levels = unique(CHROM))) %>%
-    dplyr::select_(~ChromKey, ~everything())  # note that we will drop Key from this after we have used it
+    dplyr::select_(~ChromKey, ~dplyr::everything())  # note that we will drop Key from this after we have used it
   
   retgt <- gt %>%
     dplyr::left_join(dplyr::select_(retfix, ~ChromKey, ~Key, ~POS), by = "Key") %>%
-    dplyr::select_(~ChromKey, ~POS, ~everything()) %>%
+    dplyr::select_(~ChromKey, ~POS, ~dplyr::everything()) %>%
     dplyr::select_(~ -Key)
   
   info_meta <- info_meta_full %>%
@@ -431,49 +444,78 @@ extract_gt_tidy <- function(x,
                             allele.sep = "/",
                             gt_column_prepend = "gt_") {
   
-  if(!is.null(format_fields) && any(duplicated(format_fields))) stop("Requesting extraction of duplicate format_field names")
-  if(class(x) != "vcfR") stop("Expecting x to be a vcfR object, not a ", class(x))
+  if(!is.null(format_fields) && any(duplicated(format_fields))){
+    stop("Requesting extraction of duplicate format_field names")
+  }
+  if(class(x) != "vcfR"){
+    stop("Expecting x to be a vcfR object, not a ", class(x))
+  }
   
-  vcf <- x  # rename it
+  vcf <- x  # Rename it.
   
-  # get this, because we may need it
+  # Get this, because we may need it.
+  # Extracts FORMAT acronyms from the meta region.
   format_df <- vcfR::vcf_field_names(vcf, tag = "FORMAT")
   
-  # if format_fields is NULL then we try to do all of them
+  # If format_fields is NULL then we try to do all of them
   if(is.null(format_fields)) {
     format_fields <- format_df$ID
   }
-  # if info_types == TRUE
+  # If info_types == TRUE
   # then we try to discern the fields amongst info_fields that should be coerced to integer and
-  # numeric
+  # numeric.
   if(!is.null(format_types) && length(format_types) == 1 && format_types[1] == TRUE) {
     format_types <- guess_types(format_df %>% dplyr::filter_(~ID %in% format_fields))
   }
   
-  # make a parallel vector to that as to whether the fields should numeric or not
+  # Make a parallel vector that indicates which fields should be numeric or not
   # so we can tell extract.gt to take care of it.
   coerce_numeric <- rep(FALSE, length(format_fields))
   coerce_numeric[format_fields %in% names(format_types)] <- TRUE
   
-  # now get all the gt fields
+  # Now get all the gt fields
   ex <- 1:length(format_fields)
   names(ex) <- format_fields
-  geno_info <- lapply(ex, function(i) {
+  
+  get_gt <- function(i){
     message("Extracting gt element ", names(ex)[i])
     ret <- extract.gt(x = vcf, element = format_fields[i], as.numeric = coerce_numeric[i])
-    if(dot_is_NA == TRUE) ret[ret == "."] <- NA 
-    as.vector(ret)
-  }) %>%
-    dplyr::as_data_frame() %>%
-    #setNames(paste("gt_", names(.), sep = "")) %>%
-    dplyr::mutate_(Key = ~rep(1:nrow(vcf@fix), times = ncol(vcf@gt) - 1),
- #          ChromKey = rep(fix$ChromKey, times = ncol(V@gt) - 1),
-           Indiv = ~rep(colnames(vcf@gt)[-1], each = nrow(vcf@fix))) %>%
-    dplyr::select_(~Key, ~Indiv, ~everything())
+    ret <- as.vector(ret)
+
+    ret
+  }
+  geno_info <- lapply(ex, get_gt)
   
+  geno_info <- dplyr::as_data_frame(geno_info)
+  geno_info <- dplyr::mutate_(Key = ~rep(1:nrow(vcf@fix), times = ncol(vcf@gt) - 1),
+                              Indiv = ~rep(colnames(vcf@gt)[-1], each = nrow(vcf@fix)),
+                              geno_info
+                              )
+  geno_info <- dplyr::select_(geno_info, ~Key, ~Indiv, ~dplyr::everything())
+#  geno_info <- dplyr::select_(geno_info, ~Key, ~Indiv, ~everything())
+#  geno_info <- dplyr::select_(geno_info, ~Key, ~Indiv, grep(c('Key|Indiv'), names(Z), invert=TRUE))
+  
+#  geno_info <- lapply(ex, function(i) {
+#    message("Extracting gt element ", names(ex)[i])
+#    ret <- extract.gt(x = vcf, element = format_fields[i], as.numeric = coerce_numeric[i])
+#    if(dot_is_NA == TRUE) ret[ret == "."] <- NA 
+#    as.vector(ret)
+#  }) %>%
+#    dplyr::as_data_frame() %>%
+    #setNames(paste("gt_", names(.), sep = "")) %>%
+#    dplyr::mutate_(Key = ~rep(1:nrow(vcf@fix), times = ncol(vcf@gt) - 1),
+ #          ChromKey = rep(fix$ChromKey, times = ncol(V@gt) - 1),
+#           Indiv = ~rep(colnames(vcf@gt)[-1], each = nrow(vcf@fix))) %>%
+#    dplyr::select_(~Key, ~Indiv, ~everything())
+
+  
+    
   # now coerce numerics that should be integers to ints:
+#  if( length(format_types) > 0 ){
+  if( sum( format_types == "i" ) > 0 ){
   geno_info[names(format_types)[format_types == "i"]] <- 
     lapply(geno_info[names(format_types)[format_types == "i"]], as.integer)
+  }
   
   # and now, if alleles == TRUE, get the GT column expressed as alleles
   if(alleles == TRUE) {

@@ -51,6 +51,11 @@
 vcfR2genind <- function(x, sep="[|/]") {
   locNames <- x@fix[,'ID']
   x <- extract.gt(x)
+  x[grep('.', x, fixed = TRUE)] <- NA
+#  x[grep('\\.', x)] <- NA
+#  x[x == "./."] <- NA
+#  x[x == ".|."] <- NA
+
 #  x <- adegenet::df2genind(t(x), sep=sep)
   if( requireNamespace('adegenet') ){
     x <- adegenet::df2genind(t(x), sep=sep)

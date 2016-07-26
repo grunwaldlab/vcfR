@@ -5,6 +5,32 @@ library(vcfR)
 context("vcfRtidy functions")
 
 data("vcfR_example")
+#data("vcfR_test")
+
+##### ##### ##### ##### #####
+# extract_gt_tidy
+
+test_that("extract_gt_tidy works for GT element",{
+#  Z <- extract_gt_tidy(vcf)
+  suppressMessages( 
+#
+    Z <- extract_gt_tidy(vcf, format_fields = c('GT'))
+#    Z <- extract_gt_tidy(vcf, format_fields = c('GT'), format_types = TRUE )
+#    Z <- extract_gt_tidy( vcf, format_fields = c('GT'), format_types = character(0) )
+  )
+  expect_is(Z, 'tbl_df')
+  expect_equal(names(Z)[1], 'Key')
+  expect_equal(names(Z)[2], 'Indiv')
+  expect_equal(names(Z)[3], 'gt_GT')
+  expect_equal(names(Z)[4], 'gt_GT_alleles')
+})
+
+
+test_that("extract_gt_tidy works for all elements",{
+  suppressMessages( Z <- extract_gt_tidy(vcf) )
+  expect_is(Z, 'tbl_df')
+  
+})
 
 
 ##### ##### ##### ##### #####

@@ -5,7 +5,8 @@
 #' @description
 #' Populate the ID column of VCF data by concatenating the chromosome, position and optionally an index. 
 #'  
-#' @param x an object of class vcfR or chromR
+#' @param x an object of class vcfR or chromR.
+#' @param sep a character string to separate the terms.
 #' 
 #' @details 
 #' Variant callers typically leave the ID column empty in VCF data.
@@ -13,8 +14,17 @@
 #' This function populates the missing elements by concatenating the chromosome and position.
 #' When this concatenation results in non-unique names, an index is added to force uniqueness.
 #' 
+#' 
+#' @examples
+#' data(vcfR_test)
+#' head(vcfR_test)
+#' vcfR_test <- addID(vcfR_test)
+#' head(vcfR_test)
+#' 
+#' 
 #' @export
-addID <- function(x){
+#' 
+addID <- function(x, sep="_"){
   if( class(x) == 'chromR' ){
     ID <- x@vcf@fix[,'ID']
     CHROM <- x@vcf@fix[,'CHROM']
@@ -28,9 +38,9 @@ addID <- function(x){
   }
   
   if( sum(!is.na(ID)) < length(ID) ){
-    ID[ is.na(ID) ] <- paste( CHROM[ is.na(ID) ], POS[ is.na(ID) ], sep="_" )
+    ID[ is.na(ID) ] <- paste( CHROM[ is.na(ID) ], POS[ is.na(ID) ], sep=sep )
     if( length(unique(ID)) < length(ID) ){
-      ID <- paste( ID, 1:length(ID), sep="_" )
+      ID <- paste( ID, 1:length(ID), sep=sep )
     }
   }
   

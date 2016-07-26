@@ -85,6 +85,9 @@ valid R name. (i.e. don't start with a number, have a space in it, etc.)}
 \item{tag}{name of the lines in the metadata section of the VCF file to parse out.
 Default is "INFO".  The only other one tested and supported, currently is, "FORMAT".}
 }
+\value{
+An object of class tidy::data_frame or a list where every element is of class tidy::data_frame.
+}
 \description{
 Convert the information in a vcfR object to a long-format data frame
 suitable for analysis or use with Hadley Wickham's packages, 
@@ -175,6 +178,8 @@ To run all the examples, you can issue this:
 data(vcfR_example)
 
 
+
+
 # extract all the INFO and FORMAT fields into a list of tidy
 # data frames: fix, gt, and meta. Here we don't coerce columns
 # to integer or numeric types...
@@ -253,6 +258,8 @@ vcf_field_names(vcf, tag = "INFO")
 
 # get the FORMAT field metadata in a data frame
 vcf_field_names(vcf, tag = "FORMAT")
+
+
 
 }
 \author{
