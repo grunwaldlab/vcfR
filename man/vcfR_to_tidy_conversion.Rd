@@ -11,10 +11,10 @@
 vcfR2tidy(x, info_only = FALSE, single_frame = FALSE,
   toss_INFO_column = TRUE, ...)
 
-extract_info_tidy(x, info_fields = NULL, info_types = NULL,
+extract_info_tidy(x, info_fields = NULL, info_types = TRUE,
   info_sep = ";")
 
-extract_gt_tidy(x, format_fields = NULL, format_types = NULL,
+extract_gt_tidy(x, format_fields = NULL, format_types = TRUE,
   dot_is_NA = TRUE, alleles = TRUE, allele.sep = "/",
   gt_column_prepend = "gt_")
 
@@ -41,13 +41,12 @@ its consituent parts will have been parsed into separate columns.}
 into a long format data frame.  If this is left as NULL (the default) then
 the function returns a column for every INFO field listed in the metadata.}
 
-\item{info_types}{named vector of "i" or "n" if you want the fields extracted from 
-the INFO column to be converted
-to integer or numeric types, respectively.  Otherwise they will be characters.  The names have to be
-the exact names of the fields.  For example \code{info_types = c(AF = "n", DP = "i")} will convert
-column AF to numeric and DP to integer.  If you would like the function to try to figure out the conversion
-from the metadata information, then set \code{info_types = TRUE}.  Anything with Number == 1 and (Type == Integer
-or Type == Numeric) will then be converted accordingly.}
+\item{info_types}{named vector of "i" or "n" if you want the fields extracted from the INFO column to be converted to integer or numeric types, respectively.
+When set to NULL they will be characters.  
+The names have to be the exact names of the fields.  
+For example \code{info_types = c(AF = "n", DP = "i")} will convert column AF to numeric and DP to integer.
+If you would like the function to try to figure out the conversion from the metadata information, then set \code{info_types = TRUE}.  
+Anything with Number == 1 and (Type == Integer or Type == Numeric) will then be converted accordingly.}
 
 \item{info_sep}{the delimiter used in the data portion of the INFO fields to 
 separate different entries.  By default it is ";", but earlier versions of the VCF
@@ -58,10 +57,11 @@ each individual in the vcfR object into
 a long format data frame.  If left as NULL, the function will extract all the FORMAT
 columns that were documented in the meta section of the VCF file.}
 
-\item{format_types}{named vector of "i" or "n" if you want the fields extracted according to 
-the FORMAT column to be converted
-to integer or numeric types, respectively.  Otherwise they will be characters.  The names have to be
-the exact names of the format_fields.  Works equivalently to the \code{info_types} argument in 
+\item{format_types}{named vector of "i" or "n" if you want the fields extracted according to the FORMAT column to be converted to integer or numeric types, respectively.
+When set to TRUE an attempt to determine their type will be made from the meta information.
+When set to NULL they will be characters.  
+The names have to be the exact names of the format_fields.  
+Works equivalently to the \code{info_types} argument in 
 \code{\link{extract_info_tidy}}, i.e., if you set it to TRUE then it uses the information in the
 meta section of the VCF to coerce to types as indicated.}
 
@@ -91,9 +91,9 @@ An object of class tidy::data_frame or a list where every element is of class ti
 \description{
 Convert the information in a vcfR object to a long-format data frame
 suitable for analysis or use with Hadley Wickham's packages, 
-\href{http://cran.r-project.org/package=dplyr}{dplyr},
-\href{http://cran.r-project.org/package=tidyr}{tidyr}, and
-\href{http://cran.r-project.org/package=ggplot2}{ggplot2}.
+\href{https://cran.r-project.org/package=dplyr}{dplyr},
+\href{https://cran.r-project.org/package=tidyr}{tidyr}, and
+\href{https://cran.r-project.org/package=ggplot2}{ggplot2}.
 These packages have been
 optimized for operation on large data frames, and, though they can bog down
 with very large data sets, they provide a good framework for handling and filtering
@@ -175,9 +175,8 @@ To run all the examples, you can issue this:
 }
 \examples{
 # load the data
-data(vcfR_example)
-
-
+data("vcfR_test")
+vcf <- vcfR_test
 
 
 # extract all the INFO and FORMAT fields into a list of tidy
@@ -266,7 +265,7 @@ vcf_field_names(vcf, tag = "FORMAT")
 Eric C. Anderson <eric.anderson@noaa.gov>
 }
 \seealso{
-\href{http://cran.r-project.org/package=dplyr}{dplyr},
-\href{http://cran.r-project.org/package=tidyr}{tidyr}.
+\href{https://cran.r-project.org/package=dplyr}{dplyr},
+\href{https://cran.r-project.org/package=tidyr}{tidyr}.
 }
 

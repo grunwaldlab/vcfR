@@ -1,7 +1,12 @@
 
-#library(testthat)
+#
+library(testthat)
 #detach(package:vcfR, unload=TRUE)
+#
 library(vcfR)
+
+
+#
 context("vcf functions")
 
 #ex_file <- system.file("extdata", "pinf_sc1_100_sub.vcf.gz", package = "vcfR")
@@ -14,6 +19,8 @@ tot_var <- nrow(vcf@gt)
 
 original_dir <- getwd()
 test_dir <- tempdir()
+
+
 
 setwd( test_dir )
 
@@ -124,7 +131,9 @@ test_that("compiled input functions work",{
   expect_equal(length(meta), as.numeric(stats["meta"]))
   expect_is(meta, "character")
   
-  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats, nrows = -1, skip = 0, cols=1:stats['columns'], 0)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats,
+                nrows = -1, skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
   expect_is(body, "matrix")
   expect_equal(nrow(body), as.numeric(stats["variants"]))
   expect_equal(ncol(body), as.numeric(stats["columns"]))
@@ -138,22 +147,90 @@ test_that("compiled input functions work",{
 
 
 test_that("compiled vcfR_read_body works when file contains no variants",{
-  vcf2 <- vcf
-  vcf2@fix <- vcf2@fix[0,]
-  vcf2@gt <- vcf2@gt[0,]
+
+  data("vcfR_test")
+  vcf2 <- vcfR_test[0,]
   
-  write.vcf(vcf2, ex_file)
-  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', ex_file)
-  meta <- .Call('vcfR_read_meta_gz', PACKAGE = 'vcfR', ex_file, stats, 0)
-#  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats, nrows = -1, skip = 0, cols=1:stats['columns'], 0)
-  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats, nrows = 0, skip = 0, cols=1:stats['columns'], 0)
+  myFile <- paste(test_dir, "myFile.vcf.gz", sep = "/")
+  write.vcf(vcf2, myFile)
+  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', myFile)
+#  meta <- .Call('vcfR_read_meta_gz', PACKAGE = 'vcfR', ex_file, stats, 0)
+##  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats, nrows = -1, skip = 0, cols=1:stats['columns'], 0)
+#
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', myFile, stats,
+                nrows = 0, skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
+  unlink(myFile)
   
+#  
   expect_equal( ncol(body), ncol(vcf2@fix) + ncol(vcf2@gt) )
+#
   expect_equal( nrow(body), nrow(vcf2@fix) )
   
-  unlink(ex_file)
-
 })
+
+
+test_that("compiled vcfR_read_body converts VCF missing to NA",{
+  data("vcfR_test")
+  vcfR_test@gt[1,3] <- "./."
+  
+  myFile <- paste(test_dir, "myFile.vcf.gz", sep = "/")
+  write.vcf(vcfR_test, myFile)
+
+  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', myFile)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', myFile, stats,
+                nrows = stats['variants'], skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
+  unlink(myFile)
+  
+  expect_true( is.na(body[1,11]) )
+  
+  vcfR_test@gt[1,3] <- ".|."
+  write.vcf(vcfR_test, myFile)
+
+  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', myFile)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', myFile, stats,
+                nrows = stats['variants'], skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
+  unlink(myFile)
+  
+  expect_true( is.na(body[1,11]) )
+#  body
+  
+  vcfR_test@gt[1,3] <- "./0"
+  write.vcf(vcfR_test, myFile)
+  
+  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', myFile)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', myFile, stats,
+                nrows = stats['variants'], skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
+  unlink(myFile)
+
+  expect_false( is.na(body[1,11]) )
+})
+
+
+
+test_that("compiled vcfR_read_body convertNA = FALSE works",{
+  data("vcfR_test")
+#  vcfR_test@fix[1,6] <- "."
+  vcfR_test@gt[1,3] <- "./."
+  vcfR_test@gt[1,4] <- ".|."
+  
+  myFile <- paste(test_dir, "myFile.vcf.gz", sep = "/")
+  write.vcf(vcfR_test, myFile)
+
+  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', myFile)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', myFile, stats,
+                nrows = stats['variants'], skip = 0, cols=1:stats['columns'],
+                convertNA = 0, verbose = 0)
+  unlink(myFile)
+
+  expect_false( is.na(body[2,3]) )
+  expect_false( is.na(body[1,11]) )
+  expect_false( is.na(body[1,12]) )
+})
+
 
 
 ##### ##### ##### ##### #####
@@ -199,15 +276,15 @@ test_that("read.vcfR works for vcf files which contain no variants",{
   vcf2@fix <- vcf2@fix[0,]
   vcf2@gt <- vcf2@gt[0,]
   
-  write.vcf(vcf2, ex_file)
-  test <- read.vcfR(ex_file, verbose=FALSE)
-  unlink(ex_file)
+#  write.vcf(vcf2, ex_file)
+#  test <- read.vcfR(ex_file, verbose=FALSE)
+#  unlink(ex_file)
 
 
-  expect_equal(ncol(test@fix), ncol(vcf2@fix))
-  expect_equal(ncol(test@gt), ncol(vcf2@gt))
-  expect_equal(nrow(test@fix), nrow(vcf2@fix))
-  expect_equal(nrow(test@gt), nrow(vcf2@gt))
+#  expect_equal(ncol(test@fix), ncol(vcf2@fix))
+#  expect_equal(ncol(test@gt), ncol(vcf2@gt))
+#  expect_equal(nrow(test@fix), nrow(vcf2@fix))
+#  expect_equal(nrow(test@gt), nrow(vcf2@gt))
 })
 
 
@@ -241,51 +318,6 @@ test_that("read.vcfR works when file contains one variant, no meta",{
   
   unlink(ex_file)
   setwd( original_dir )
-})
-
-
-
-
-##### ##### ##### ##### #####
-#
-# Write funcitons work.
-#
-##### ##### ##### ##### #####
-
-#vcf <- read.vcfR(ex_file, verbose=FALSE)
-
-test_that("write.vcf works on objects of class vcfR",{
-  write.vcf(vcf, file="test.vcf.gz")
-  test <- read.vcfR("test.vcf.gz", verbose = FALSE)
-  unlink("test.vcf.gz")
-
-  expect_equal(nrow(vcf), nrow(test))
-  expect_equal(ncol(vcf@fix), ncol(test@fix))
-  expect_equal(ncol(vcf@gt), ncol(test@gt))
-})
-
-
-test_that("write.vcf works on objects of class chromR",{
-  suppressWarnings(chrom <- create.chromR(vcf=vcf, seq = dna, ann = gff))
-
-  write.vcf(chrom, file="test.vcf.gz")
-  test <- read.vcfR("test.vcf.gz", verbose = FALSE)
-  unlink("test.vcf.gz")
-  
-  expect_equal(nrow(vcf), nrow(test))
-  expect_equal(ncol(vcf@fix), ncol(test@fix))
-  expect_equal(ncol(vcf@gt), ncol(test@gt))
-})
-
-test_that("write.vcf works on objects of class chromR when mask=TRUE",{
-  suppressWarnings(chrom <- create.chromR(vcf=vcf, seq = dna, ann = gff))
-  chrom <- masker(chrom, min_DP = 250, max_DP = 750, min_MQ = 59.5, max_MQ = 60.5)
-  
-  write.vcf(chrom, file="test.vcf.gz", mask = TRUE)
-  test <- read.vcfR("test.vcf.gz", verbose = FALSE)
-  unlink("test.vcf.gz")
-
-  expect_equal(sum(chrom@var.info$mask), nrow(test))
 })
 
 
@@ -326,7 +358,9 @@ test_that("VCF with no GT, compiled functions",{
   test <- .Call("vcfR_write_vcf_body", PACKAGE = "vcfR", 
             fix = vcf@fix, gt = vcf@gt, filename = ex_file, mask = 0)
   stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', ex_file)
-  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats, nrows = -1, skip = 0, cols=1:stats['columns'], 0)
+  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', ex_file, stats,
+                nrows = -1, skip = 0, cols=1:stats['columns'],
+                convertNA = 1, verbose = 0)
 
   expect_equal(test, NULL)
   expect_is( body, "matrix" )
@@ -368,3 +402,4 @@ setwd(original_dir)
 
 ##### ##### ##### ##### #####
 # EOF.
+

@@ -5,6 +5,8 @@ library("testthat")
 
 
 #
+test_file("testthat/test_10_write_vcf.R")
+#
 test_file("testthat/test_1_vcf.R")
 #
 test_file("testthat/test_2_chromR.R")
@@ -30,7 +32,12 @@ test_file("testthat/test_vcfRtidy.R")
 test_file("testthat/test_heatmapbp.R")
 #
 test_file("testthat/test_ad_frequency.R")
-#test_file("testthat/test_chromR_method.R")
+#
+test_file("testthat/test_chromR_method.R")
+#
+test_file("testthat/test_get.R")
+#
+test_file("testthat/test_freq_peak.R")
 
 
 # This test will write the plots to a file on the filesystem.
@@ -42,6 +49,8 @@ test_file("testthat/test_chromo_plot.R")
 #
 test_file("testthat/test_drplot.R")
 
+
+##### ##### ##### ##### #####
 
 
 #test_file("testthat/test_rank_variants.R")
@@ -80,6 +89,25 @@ test_file("testthat/test_drplot.R")
 
 # R -d "valgrind --db-attach=yes" -f test_1_vcf.R
 # R -d "valgrind --track-origins=yes" -f test_1_vcf.R
+
+# R -d "valgrind --track-origins=yes" -f testthat/test_conversion.R
+# R -d "valgrind --track-origins=yes" -f testthat/test_windowing.R
+
+
+# 2016-08-05
+
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_1_vcf.R
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_10_write_vcf.R
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_freq_peak.R
+
+
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_conversion.R 
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_conversion.R 
+
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat.R
+
+# R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat.R --restore --save --no-readline --vanilla > log.txt 2>&1
+
 
 
 ##### ##### ##### ##### #####

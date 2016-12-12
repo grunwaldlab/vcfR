@@ -197,22 +197,61 @@ cols is a vector indicating which columns to select from the file data.
 void proc_body_line(Rcpp::CharacterMatrix gt,
                     int var_num,
                     std::string myline,
-                    Rcpp::IntegerVector cols){
+                    Rcpp::IntegerVector cols,
+                    int convertNA){
   
   char split = '\t'; // Must be single quotes!
   std::vector < std::string > data_vec;
   
   vcfRCommon::strsplit(myline, data_vec, split);
 
-//  for(int i = 0; i < data_vec.size(); i++){
   for(int i = 0; i < cols.size(); i++){
-//    if(data_vec[i] == "."){
-    if(data_vec[ cols[i] ] == "."){
-      gt(var_num, i) = NA_STRING;
-//    } else if(data_vec[i] == "./."){
-//    } else if( data_vec[ i ][0] == '.' & data_vec[ i ][2] == '.' ){
-    } else if( data_vec[ cols[i] ][0] == '.' & data_vec[ cols[i] ][2] == '.' & data_vec[ cols[i] ].size() == 3 ){
-      gt(var_num, i) = NA_STRING;
+    if( convertNA == 1 ){
+      // The VCF specification encodes missing data as ".".
+      // Missing genotypes may be encoded as "./.", ".|.", etc.
+      // Here we convert is to NA.
+      if( data_vec[ cols[i] ] == "." ){
+        gt(var_num, i) = NA_STRING;
+      } else {
+        // Possible genotype missing.
+        std::vector < std::string > allele_vec;
+        int unphased_as_na = 0; // 0 == FALSE
+        std::string my_string;
+//        if( data_vec[ cols[i] ] == NA_STRING ){
+//          my_string = ".";
+//        } else {
+          my_string = data_vec[ cols[i] ];
+//        }
+        
+        vcfRCommon::gtsplit( my_string, allele_vec, unphased_as_na );
+        int gtNA = 1;
+        for( int k = 0; k < allele_vec.size(); k++ ){
+//            Rcpp::Rcout << "allele_vec[k]: " << allele_vec[k] << "\n";
+          if( allele_vec[k] != "." ){ gtNA = 0; }
+        }
+        if( gtNA == 1 ){
+          gt(var_num, i) = NA_STRING;
+        } else {
+          gt(var_num, i) = data_vec[ cols[i] ];
+        }
+      }
+//        int gtNA = 1;
+//        for(int j = 0; j < data_vec[ cols[i] ].size(); j++){
+//          if( data_vec[ cols[i] ][j] != '.' ){
+//            gtNA = 0;
+//          }
+//          j++; // Every other character should be a delimiter.
+//        }
+//        if( gtNA == 1 ){
+//          gt(var_num, i) = NA_STRING;
+//        } else {
+//          gt(var_num, i) = data_vec[ cols[i] ];
+//        }
+//      }
+//      } else if( data_vec[ cols[i] ][0] == '.' & data_vec[ cols[i] ][2] == '.' & 
+//               data_vec[ cols[i] ].size() == 3 & convertNA == 1 ){
+      // We can also convert diploid genotypes where both alleles are "." to NA.
+//      gt(var_num, i) = NA_STRING;
     } else {
       gt(var_num, i) = data_vec[ cols[i] ];
     }
@@ -235,6 +274,7 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
                                    int nrows = -1,
                                    int skip = 0,
                                    Rcpp::IntegerVector cols = 0,
+                                   int convertNA = 1,
                                    int verbose = 1) {
 
   // NA matrix for unexpected results.
@@ -381,7 +421,7 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
         // Variant line.
 
         if ( var_num >= skip & row_num < nrows ){
-          proc_body_line(gt, row_num, svec[i], cols);
+          proc_body_line(gt, row_num, svec[i], cols, convertNA);
           row_num++; // Return matrix row number.
         }
         var_num++; // Input row number.
@@ -510,51 +550,98 @@ void write_vcf_body( Rcpp::CharacterMatrix fix,
                      int mask=0 ) {
   // http://stackoverflow.com/a/5649224
   
-//  Rcpp::Rcout << "Made it into the function!\n";
+//  
+int verbose = 0;
+//  int verbose = 1;
+  
+  if( verbose == 1 ){
+    Rcpp::Rcout << "Made it into the function!\n";
+  }
   
   int i = 0; // Rows
   int j = 0; // Columns
   std::string tmpstring;  // Assemble each line before writing
+
+  // Initialize filehandle.
+  gzFile fi;
   
-  
-  gzFile fi = gzopen( filename.c_str(), "ab" );
+  // Initialize file.
+  // Note that gzfile does not tolerate initializing an empty file.
+  // Use ofstream instead.
+  if ( ! std::ifstream( filename ) ){
+    if( verbose == 1 ){
+      Rcpp::Rcout << "File does not exist." << std::endl;
+    }
+    
+    std::ofstream myfile;
+    myfile.open (filename, std::ios::out | std::ios::binary);
+    myfile.close();
+    
+    // This should make valgrind hang.
+    // Or not???
+//    fi = gzopen( filename.c_str(), "ab" );
+//    gzclose(fi);
+  }
 
   // In order for APPEND=TRUE to work the header
   // should not be printed here.
 
-
+  if( verbose == 1 ){
+    Rcpp::Rcout << "Matrix fix has " << fix.nrow() << " rows (variants).\n";
+  }
+  
   // Manage body
-  for(i = 0; i < fix.nrow(); i++){
-    Rcpp::checkUserInterrupt();
-    if(mask == 1 && fix(i,6) != "PASS" ){
-      // Don't print variant.
-    } else {
-      j = 0;
-      tmpstring = fix(i,j);
-      for(j = 1; j < fix.ncol(); j++){
-        if(fix(i,j) == NA_STRING){
-          tmpstring = tmpstring + "\t" + ".";
-        } else {
-          tmpstring = tmpstring + "\t" + fix(i,j);
-        }
-      }
+  if( fix.nrow() >= 1 ){
+    if( verbose == 1 ){
+      Rcpp::Rcout << "Processing the body (variants).\n";
+    }
+    // There is at least one variant.
+    fi = gzopen( filename.c_str(), "ab" );
+    if (! fi) {
+      Rcpp::Rcerr << "gzopen of " << filename << " failed: " << strerror (errno) << ".\n";
+    }
 
-      // gt portion
-      for(j = 0; j < gt.ncol(); j++){
-        if(gt(i, j) == NA_STRING){
-          tmpstring = tmpstring + "\t" + "./.";
-        } else {
-          tmpstring = tmpstring + "\t" + gt(i, j);
-        }
-      }
+    for(i = 0; i < fix.nrow(); i++){
+      Rcpp::checkUserInterrupt();
 
-      gzwrite(fi, (char *)tmpstring.c_str(), tmpstring.size());
-      gzwrite(fi,"\n",strlen("\n"));
+      if(mask == 1 && fix(i,6) != "PASS" ){
+        // Don't print variant.
+      } else {
+        // Print variant.
+        j = 0;
+        tmpstring = fix(i,j);
+        for(j = 1; j < fix.ncol(); j++){
+          if(fix(i,j) == NA_STRING){
+            tmpstring = tmpstring + "\t" + ".";
+          } else {
+            tmpstring = tmpstring + "\t" + fix(i,j);
+          }
+        }
+
+        // gt portion
+        for(j = 0; j < gt.ncol(); j++){
+          if(gt(i, j) == NA_STRING){
+            tmpstring = tmpstring + "\t" + "./.";
+          } else {
+            tmpstring = tmpstring + "\t" + gt(i, j);
+          }
+        }
+
+        gzwrite(fi, tmpstring.c_str(), tmpstring.size());
+        gzwrite(fi,"\n",strlen("\n"));
+      }
+    }
+    if( verbose == 1 ){
+      Rcpp::Rcout << "Finished processing the body (variants).\n";
+    }
+    gzclose(fi);
+  } else {
+    if( verbose == 1 ){
+      Rcpp::Rcout << "No rows (variants).\n";
     }
   }
-  gzclose(fi);
   
-  return;
+//  return void;
 }
 
 

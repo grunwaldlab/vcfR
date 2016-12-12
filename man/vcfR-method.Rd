@@ -2,7 +2,7 @@
 % Please edit documentation in R/vcfR-method.R
 \docType{methods}
 \name{show,vcfR-method}
-\alias{[,vcfR-method}
+\alias{[,vcfR,ANY,ANY,ANY-method}
 \alias{dim,vcfR-method}
 \alias{dim.vcfR}
 \alias{head,vcfR-method}
@@ -22,7 +22,7 @@
 
 \S4method{head}{vcfR}(x, n = 6, maxchar = 80)
 
-\S4method{[}{vcfR}(x, i, j, drop)
+\S4method{[}{vcfR,ANY,ANY,ANY}(x, i, j, ..., drop = TRUE)
 
 \S4method{plot}{vcfR}(x, y, ...)
 
@@ -55,11 +55,11 @@
 
 \item{j}{vector of columns (samples) to include}
 
+\item{...}{Arguments to be passed to methods}
+
 \item{drop}{delete the dimensions of an array which only has one level}
 
 \item{y}{not used}
-
-\item{...}{Arguments to be passed to methods}
 }
 \description{
 Methods to show, subset or plot data from objects of class vcfR

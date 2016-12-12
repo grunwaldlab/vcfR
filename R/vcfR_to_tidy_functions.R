@@ -19,9 +19,9 @@ NULL
 #' @description
 #' Convert the information in a vcfR object to a long-format data frame
 #' suitable for analysis or use with Hadley Wickham's packages, 
-#' \href{http://cran.r-project.org/package=dplyr}{dplyr},
-#' \href{http://cran.r-project.org/package=tidyr}{tidyr}, and
-#' \href{http://cran.r-project.org/package=ggplot2}{ggplot2}.
+#' \href{https://cran.r-project.org/package=dplyr}{dplyr},
+#' \href{https://cran.r-project.org/package=tidyr}{tidyr}, and
+#' \href{https://cran.r-project.org/package=ggplot2}{ggplot2}.
 #' These packages have been
 #' optimized for operation on large data frames, and, though they can bog down
 #' with very large data sets, they provide a good framework for handling and filtering
@@ -106,14 +106,14 @@ NULL
 #' 
 #' @author Eric C. Anderson <eric.anderson@@noaa.gov>
 #' @seealso
-#' \href{http://cran.r-project.org/package=dplyr}{dplyr},
-#' \href{http://cran.r-project.org/package=tidyr}{tidyr}.
+#' \href{https://cran.r-project.org/package=dplyr}{dplyr},
+#' \href{https://cran.r-project.org/package=tidyr}{tidyr}.
 #' 
 #' @examples 
 #' # load the data
-#' data(vcfR_example)
-#' 
-#' 
+# data(vcfR_example)
+#' data("vcfR_test")
+#' vcf <- vcfR_test
 #' 
 #' 
 #' # extract all the INFO and FORMAT fields into a list of tidy
@@ -344,18 +344,17 @@ vcfR2tidy <- function(x,
 #' @param info_fields names of the fields to be extracted from the INFO column
 #' into a long format data frame.  If this is left as NULL (the default) then
 #' the function returns a column for every INFO field listed in the metadata.
-#' @param info_types named vector of "i" or "n" if you want the fields extracted from 
-#' the INFO column to be converted
-#' to integer or numeric types, respectively.  Otherwise they will be characters.  The names have to be
-#' the exact names of the fields.  For example \code{info_types = c(AF = "n", DP = "i")} will convert
-#' column AF to numeric and DP to integer.  If you would like the function to try to figure out the conversion
-#' from the metadata information, then set \code{info_types = TRUE}.  Anything with Number == 1 and (Type == Integer
-#' or Type == Numeric) will then be converted accordingly.
+#' @param info_types named vector of "i" or "n" if you want the fields extracted from the INFO column to be converted to integer or numeric types, respectively.
+#' When set to NULL they will be characters.  
+#' The names have to be the exact names of the fields.  
+#' For example \code{info_types = c(AF = "n", DP = "i")} will convert column AF to numeric and DP to integer.
+#' If you would like the function to try to figure out the conversion from the metadata information, then set \code{info_types = TRUE}.  
+#' Anything with Number == 1 and (Type == Integer or Type == Numeric) will then be converted accordingly.
 #' @param info_sep the delimiter used in the data portion of the INFO fields to 
 #' separate different entries.  By default it is ";", but earlier versions of the VCF
 #' standard apparently used ":" as a delimiter.
 #' @export
-extract_info_tidy <- function(x, info_fields = NULL, info_types = NULL, info_sep = ";") {
+extract_info_tidy <- function(x, info_fields = NULL, info_types = TRUE, info_sep = ";") {
   
   if(!is.null(info_fields) && any(duplicated(info_fields))) stop("Requesting extraction of duplicate info_field names")
   if(class(x) != "vcfR") stop("Expecting x to be a vcfR object, not a ", class(x))
@@ -397,6 +396,7 @@ extract_info_tidy <- function(x, info_fields = NULL, info_types = NULL, info_sep
   if(!is.null(info_types)) {
     ns <- info_types[!is.na(info_types) & info_types == "n"]
     is <- info_types[!is.na(info_types) & info_types == "i"]
+    fs <- info_types[!is.na(info_types) & info_types == "f"]
     
     if(length(ns) > 0) {
       ret[names(ns)] <- lapply(ret[names(ns)], as.numeric)
@@ -404,6 +404,16 @@ extract_info_tidy <- function(x, info_fields = NULL, info_types = NULL, info_sep
     if(length(is) > 0) {
       ret[names(is)] <- lapply(ret[names(is)], as.integer)
     }
+    
+    proc_flag <- function(x, INFO){
+      x2 <- rep(FALSE, times = length(INFO))
+      x2[ grep(x, INFO) ] <- TRUE
+      x2
+    }
+    if(length(fs) > 0) {
+      ret[names(fs)] <- lapply(names(fs), proc_flag, x$INFO)
+    }
+    
   }
   cbind(Key = 1:nrow(ret), ret) %>% dplyr::tbl_df()
 }
@@ -416,10 +426,11 @@ extract_info_tidy <- function(x, info_fields = NULL, info_types = NULL, info_sep
 #' each individual in the vcfR object into 
 #' a long format data frame.  If left as NULL, the function will extract all the FORMAT
 #' columns that were documented in the meta section of the VCF file.
-#' @param format_types named vector of "i" or "n" if you want the fields extracted according to 
-#' the FORMAT column to be converted
-#' to integer or numeric types, respectively.  Otherwise they will be characters.  The names have to be
-#' the exact names of the format_fields.  Works equivalently to the \code{info_types} argument in 
+#' @param format_types named vector of "i" or "n" if you want the fields extracted according to the FORMAT column to be converted to integer or numeric types, respectively.
+#' When set to TRUE an attempt to determine their type will be made from the meta information.
+#' When set to NULL they will be characters.  
+#' The names have to be the exact names of the format_fields.  
+#' Works equivalently to the \code{info_types} argument in 
 #' \code{\link{extract_info_tidy}}, i.e., if you set it to TRUE then it uses the information in the
 #' meta section of the VCF to coerce to types as indicated.
 #' @param dot_is_NA if TRUE then a single "." in a character field will be set to NA.  If FALSE
@@ -438,7 +449,7 @@ extract_info_tidy <- function(x, info_fields = NULL, info_types = NULL, info_sep
 #' @export
 extract_gt_tidy <- function(x, 
                             format_fields = NULL, 
-                            format_types = NULL, 
+                            format_types = TRUE, 
                             dot_is_NA = TRUE,
                             alleles = TRUE,
                             allele.sep = "/",
@@ -538,12 +549,17 @@ guess_types <- function(D) {
     dplyr::filter_(~Number == 1) %>%
     dplyr::mutate_(tt = ~ifelse(Type == "Integer", "i", ifelse(Type == "Numeric" | Type == "Float", "n", ""))) %>%
     dplyr::filter_(~tt %in% c("n", "i")) %>%
-    dplyr::select_(~ID, ~Number, ~Type, ~tt) 
+    dplyr::select_(~ID, ~Number, ~Type, ~tt)
+  
+  tmp <- D %>%  dplyr::filter_(~Number == 0 & Type == 'Flag')  %>%
+    dplyr::mutate_(tt = ~ifelse(Type == "Flag", "f")) %>%
+    dplyr::filter_(~tt %in% c("f")) %>%
+    dplyr::select_(~ID, ~Number, ~Type, ~tt)  %>%
+    dplyr::bind_rows(tmp)   
   
   ret <- tmp$tt
   names(ret) <- tmp$ID
   ret
-    
 }
 
 #### vcf_field_names ####

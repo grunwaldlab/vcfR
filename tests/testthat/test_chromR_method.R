@@ -1,7 +1,8 @@
 
 
 # detach(package:vcfR, unload=T)
-#library(testthat)
+#
+library(testthat)
 library(vcfR)
 context("chromR methods")
 
@@ -25,8 +26,8 @@ test_that("chromR print",{
 })
 
 test_that("chromR head",{
-  tmp <- head(chrom)
-  expect_null(tmp)
+#  tmp <- head(chrom)
+#  expect_null(tmp)
 #  expect_true(is.null(tmp))
 })
 
@@ -39,3 +40,4 @@ test_that("chromR names<-",{
 
 
 # EOF.
+

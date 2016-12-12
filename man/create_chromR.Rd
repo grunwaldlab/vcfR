@@ -3,16 +3,12 @@
 \name{create.chromR}
 \alias{ann2chromR}
 \alias{create.chromR}
-\alias{getCHROM}
-\alias{getFIX}
-\alias{getPOS}
-\alias{getQUAL}
 \alias{seq2chromR}
 \alias{vcf2chromR}
 \alias{vcfR2chromR}
 \title{Create chromR object}
 \usage{
-create.chromR(vcf, name = "CHROM1", seq = NULL, ann = NULL,
+create.chromR(vcf, name = "CHROM", seq = NULL, ann = NULL,
   verbose = TRUE)
 
 vcfR2chromR(x, vcf)
@@ -20,14 +16,6 @@ vcfR2chromR(x, vcf)
 seq2chromR(x, seq = NULL)
 
 ann2chromR(x, gff)
-
-getFIX(x)
-
-getCHROM(x)
-
-getPOS(x)
-
-getQUAL(x)
 }
 \arguments{
 \item{vcf}{an object of class vcfR}
@@ -84,7 +72,7 @@ chromoqc(chrom)
 \code{\link{chromR-class}},
 \code{\link{vcfR-class}},
 \code{\link[ape]{DNAbin}},
-\href{http://www.1000genomes.org/wiki/analysis/variant\%20call\%20format/vcf-variant-call-format-version-41}{vcf format}, 
+\href{https://github.com/samtools/hts-specs}{VCF specification}
 \href{https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md}{gff3 format}
 }
 

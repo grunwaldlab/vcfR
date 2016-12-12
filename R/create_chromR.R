@@ -40,7 +40,8 @@
 #' \code{\link{chromR-class}},
 #' \code{\link{vcfR-class}},
 #' \code{\link[ape]{DNAbin}},
-#' \href{http://www.1000genomes.org/wiki/analysis/variant\%20call\%20format/vcf-variant-call-format-version-41}{vcf format}, 
+# \href{http://www.1000genomes.org/wiki/analysis/variant\%20call\%20format/vcf-variant-call-format-version-41}{vcf format}, 
+#' \href{https://github.com/samtools/hts-specs}{VCF specification}
 #' \href{https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md}{gff3 format}
 #' 
 #' @examples
@@ -83,7 +84,7 @@
 # hist(tab$Ho - tab$He, col=5)
 # # Note that this example is a mitochondrion, so this is a bit silly.
 #' 
-create.chromR <- function(vcf, name="CHROM1", seq=NULL, ann=NULL, verbose=TRUE){
+create.chromR <- function(vcf, name="CHROM", seq=NULL, ann=NULL, verbose=TRUE){
   # Determine whether we received the expected classes.
   stopifnot(class(vcf) == "vcfR")
 
@@ -113,21 +114,23 @@ create.chromR <- function(vcf, name="CHROM1", seq=NULL, ann=NULL, verbose=TRUE){
   }
 
   # Annotations.
-  if(!is.null(ann)){
+  if( !is.null(ann) ){
+    if( nrow(ann) > 0 ){
 #  if(nrow(ann) > 0){
-    stopifnot(class(ann) == "data.frame")
-    if(class(ann[,4]) == "factor"){ann[,4] <- as.character(ann[,4])}
-    if(class(ann[,5]) == "factor"){ann[,5] <- as.character(ann[,5])}
-    if(class(ann[,4]) == "character"){ann[,4] <- as.numeric(ann[,4])}
-    if(class(ann[,5]) == "character"){ann[,5] <- as.numeric(ann[,5])}
-    x@ann <- ann
+      stopifnot(class(ann) == "data.frame")
+      if(class(ann[,4]) == "factor"){ann[,4] <- as.character(ann[,4])}
+      if(class(ann[,5]) == "factor"){ann[,5] <- as.character(ann[,5])}
+      if(class(ann[,4]) == "character"){ann[,4] <- as.numeric(ann[,4])}
+      if(class(ann[,5]) == "character"){ann[,5] <- as.numeric(ann[,5])}
+      x@ann <- ann
     
-    # Manage length
-    if( max(as.integer(as.character(ann[,4]))) > x@len ){
-      x@len <- max(as.integer(as.character(ann[,4])))
-    }
-    if( max(as.integer(as.character(ann[,5]))) > x@len ){
-      x@len <- max(as.integer(as.character(ann[,5])))
+      # Manage length
+      if( max(as.integer(as.character(ann[,4]))) > x@len ){
+        x@len <- max(as.integer(as.character(ann[,4])))
+      }
+      if( max(as.integer(as.character(ann[,5]))) > x@len ){
+        x@len <- max(as.integer(as.character(ann[,5])))
+      }
     }
   }
 
@@ -159,6 +162,14 @@ create.chromR <- function(vcf, name="CHROM1", seq=NULL, ann=NULL, verbose=TRUE){
       message("Names in annotation:")
       message(paste('  ', unique(as.character(x@ann[,1])), sep=""))
 #      if(unique(as.character(x@vcf.fix$CHROM)) != unique(as.character(x@ann[,1]))){
+      if( length( unique(as.character(x@ann[,1])) ) > 1 ){
+        warning("The annotation data appear to include more than one chromosome.\nUsing only the first.\n")
+        firstChrom <- unique(as.character(x@ann[,1]))[1]
+        x@ann <- x@ann[ x@ann[,1] == firstChrom, , drop = FALSE]
+        myChrom <- unique( x@ann[,1] )
+        warning( paste('Using annotation chromosome:', myChrom, '\n') )
+      }
+      
       if(chr_names != unique(as.character(x@ann[,1]))){
         warning("
         Names in variant data and annotation data do not match perfectly.
@@ -188,7 +199,9 @@ create.chromR <- function(vcf, name="CHROM1", seq=NULL, ann=NULL, verbose=TRUE){
 #  dp <- getDP(x)
   dp <- extract.info(x, element = 'DP', as.numeric = TRUE)
   if( length(dp) > 0 ){ x@var.info$DP <- dp }
-  x@var.info$mask <- TRUE
+  if( nrow(x@var.info) > 0 ){
+    x@var.info$mask <- TRUE
+  }
   if( verbose == TRUE ){
     message("var.info slot initialized.")
   }
@@ -294,46 +307,6 @@ ann2chromR <- function(x, gff){
 }
 
 
-
-##### ##### ##### ##### #####
-#
-# Getters.
-#
-##### ##### ##### ##### #####
-
-#' @rdname create_chromR
-#' @export
-#' @aliases getPOS
-getFIX <- function(x){
-  if(class(x) != "chromR"){stop("expecting object of class chromR")}
-  x@vcf@fix
-}
-
-#' @rdname create_chromR
-#' @export
-#' @aliases getPOS
-getCHROM <- function(x){
-  if(class(x) != "chromR"){stop("expecting object of class chromR")}
-  x@vcf@fix[,"CHROM"]
-}
-
-
-#' @rdname create_chromR
-#' @export
-#' @aliases getPOS
-getPOS <- function(x){
-  if(class(x) != "chromR"){stop("expecting object of class chromR")}
-  as.integer(x@vcf@fix[,"POS"])
-}
-
-
-#' @rdname create_chromR
-#' @export
-#' @aliases getPOS
-getQUAL <- function(x){
-  if(class(x) != "chromR"){stop("expecting object of class chromR")}
-  as.integer(x@vcf@fix[,"QUAL"])
-}
 
 
 

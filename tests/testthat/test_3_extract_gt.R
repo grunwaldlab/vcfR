@@ -1,6 +1,7 @@
 # extractgt devel
 
-#library(testthat)
+#
+library(testthat)
 #detach(package:vcfR, unload=TRUE)
 library(vcfR)
 context("extract.gt functions")
@@ -67,12 +68,53 @@ test_that("extract.gt extract parameter works",{
 
 ##### ##### ##### ##### #####
 #
+# extract.gt missing data.
+#
+##### ##### ##### ##### #####
+
+
+test_that("extract.gt converts missing GT to NA",{
+  data("vcfR_test")
+  
+  vcfR_test@gt[1,2] <- "./.:48:1:51,51"
+  gt <- extract.gt(vcfR_test)
+  expect_true( is.na(gt[1,1]) )
+  
+  vcfR_test@gt[1,2] <- ".|.:48:1:51,51"
+  gt <- extract.gt(vcfR_test)
+  expect_true( is.na(gt[1,1]) )
+  
+  vcfR_test@gt[1,2] <- ".|0:48:1:51,51"
+  gt <- extract.gt(vcfR_test)
+  expect_false( is.na(gt[1,1]) )
+})
+
+
+test_that("extract.gt convertNA = FALSE works",{
+  data("vcfR_test")
+  
+  vcfR_test@gt[1,2] <- "./.:48:1:51,51"
+  gt <- extract.gt(vcfR_test, convertNA = FALSE)
+  expect_false( is.na( gt[1,1] ) )
+  
+  vcfR_test@gt[1,2] <- ".|.:48:1:51,51"
+  gt <- extract.gt(vcfR_test, convertNA = FALSE)
+  expect_false( is.na(gt[1,1]) )
+
+})
+
+##### ##### ##### ##### #####
+#
 # extract.gt return.alleles tests
 #
 ##### ##### ##### ##### #####
 
 test_that("extract.gt return.alleles works",{
-  gt <- extract.gt(chrom, element="GT", return.alleles = TRUE, allele.sep="|")
+  gt <- extract.gt(chrom, 
+                   element="GT", 
+                   return.alleles = TRUE
+#                   allele.sep="|"
+                   )
   expect_is(gt, "matrix")
   
 })
@@ -81,7 +123,11 @@ test_that("extract.gt return.alleles works",{
 test_that("extract.gt return.alleles works for multiallelic variants",{
 #  vcf2 <- vcf[nchar(vcf@fix[,'ALT']) > 1,]
   vcf2 <- vcf[grep(",", vcf@fix[,'ALT']),]
-  gt <- extract.gt(vcf2, element="GT", return.alleles = TRUE, allele.sep="|")
+  gt <- extract.gt(vcf2, 
+                   element="GT", 
+                   return.alleles = TRUE
+#                   allele.sep="|"
+                   )
   
   # Locus 1: 0,1,2 = T,A,G
   # 0|0
@@ -116,7 +162,7 @@ test_that("extract_haps compiled code works",{
   gt[4,2] <- "0|."
   gt[5,2] <- ".|1"
     
-  haps <- .Call('vcfR_extract_haps', PACKAGE = 'vcfR', vcf@fix[,'REF'], vcf@fix[,'ALT'], gt, '|', 0)
+  haps <- .Call('vcfR_extract_haps', PACKAGE = 'vcfR', vcf@fix[,'REF'], vcf@fix[,'ALT'], gt, 0, 0)
   expect_is(haps, "matrix")
   expect_true( is.na(haps[1,1]) )
   expect_true( is.na(haps[1,2]) )
@@ -138,7 +184,7 @@ test_that("extract_haps R code works on vcfR objects",{
   vcf@gt[2,3] <- "0|.:12,0:12:39:0,39,585"
   vcf@gt[3,3] <- ".|1:12,0:12:39:0,39,585"
   
-  haps <- extract.haps(vcf, gt.split="|", verbose = FALSE)
+  haps <- extract.haps(vcf, verbose = FALSE)
   haps[1:6,1:8]
   
   expect_true( is.na(haps[1,3]) )
@@ -156,13 +202,20 @@ chrom <- create.chromR(name="Chrom", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
 chrom <- masker(chrom, min_DP = 1e3, max_DP = 2e3)
 
 test_that("extract_haps R code works on chromR objects",{
-  haps <- extract.haps(chrom, gt.split="|", verbose = FALSE)
+  haps <- extract.haps(chrom, verbose = FALSE)
   expect_is(haps, "matrix")
   expect_equal(ncol(haps), 2 * ncol(gt))
   expect_equal(nrow(haps), nrow(gt))
 })
 
 
+test_that("extract_haps unphased_as_NA works",{
+  data(vcfR_test)
+  haps <- extract.haps(vcfR_test, unphased_as_NA = FALSE, verbose = FALSE)
+  expect_equal(sum(is.na(haps)), 0)
+  haps <- extract.haps(vcfR_test, unphased_as_NA = TRUE, verbose = FALSE)
+  expect_equal(sum(is.na(haps)), 14)
+})
 
 
 ##### ##### ##### ##### #####
@@ -185,20 +238,29 @@ test_that("extract.indels works",{
 ##### ##### ##### ##### #####
 
 
-data(vcfR_example)
+#data(vcfR_example)
 
-vcf <- vcf[1:4, 1:3]
-vcf@gt[2,3] <- ".|0:12,0:12:39:0,39,585"
-vcf@gt[3,3] <- "0|.:12,0:12:39:0,39,585"
-vcf@gt[4,3] <- ".|.:12,0:12:39:0,39,585"
+#vcf <- vcf[1:4, 1:3]
+#vcf@gt[2,3] <- ".|0:12,0:12:39:0,39,585"
+#vcf@gt[3,3] <- "0|.:12,0:12:39:0,39,585"
+#vcf@gt[4,3] <- ".|.:12,0:12:39:0,39,585"
 
 test_that("gt2alleles works",{
+  data("vcfR_test")
+  vcfR_test@gt
+  gt <- extract.gt(vcfR_test, return.alleles=TRUE)
+#  gt
+  
+  expect_equal( as.character(gt[1,1]), "G|G")
+  expect_equal( as.character(gt[1,3]), "A/A")
+  expect_equal( as.character(gt[5,1]), "GTC/G")
+  
 #  cbind(vcf@fix[,4:5], vcf@gt)
-  gt <- extract.gt(vcf, return.alleles=TRUE, allele.sep = "|")
-  expect_equal( as.character(gt[1,2]), "T|T")
-  expect_equal( as.character(gt[2,2]), ".|C")
-  expect_equal( as.character(gt[3,2]), "A|.")
-  expect_equal( as.character(gt[4,2]), ".|.")
+#  gt <- extract.gt(vcf, return.alleles=TRUE, allele.sep = "|")
+#  expect_equal( as.character(gt[1,2]), "T|T")
+#  expect_equal( as.character(gt[2,2]), ".|C")
+#  expect_equal( as.character(gt[3,2]), "A|.")
+#  expect_equal( as.character(gt[4,2]), ".|.")
 })
 
 
@@ -212,12 +274,21 @@ test_that("gt2alleles works",{
 
 
 test_that("extract_gt_to_CM2 compiled code works",{
-  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', vcf@fix, vcf@gt, 'GT', '|', 0, 1 )
+  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', 
+               fix = vcf@fix, gt = vcf@gt,
+               element = 'GT',
+               alleles = 0, extract = 1, convertNA = 1 )
 #  head(gt)
   # Return alleles
-  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', vcf@fix, vcf@gt, 'GT', '|', 1, 1 )
+  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', 
+               fix = vcf@fix, gt = vcf@gt, 
+               element = 'GT',
+               alleles = 1, extract = 1, convertNA = 1 )
 #  head(gt)
-  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', vcf@fix, vcf@gt, 'DP', '|', 0, 1 )
+  gt <- .Call( 'vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR',
+               fix = vcf@fix, gt = vcf@gt,
+               element = 'DP',
+               alleles = 0, extact = 1, convertNA = 1 )
 #  head(gt)
   
   # Manage NA_STRING

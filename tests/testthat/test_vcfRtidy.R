@@ -1,6 +1,7 @@
 
 
-#library(testthat)
+#
+library(testthat)
 library(vcfR)
 context("vcfRtidy functions")
 
@@ -62,6 +63,13 @@ test_that("extract_info_tidy works",{
   
 #  expect_equal( length(Z), 3 )
 
+})
+
+test_that("extract_info_tidy works with Flags",{
+  data(vcfR_test)
+  Z <- extract_info_tidy(vcfR_test, info_types = TRUE)
+  expect_is(Z$DB, "logical")
+  expect_is(Z$H2, "logical")
 })
 
 

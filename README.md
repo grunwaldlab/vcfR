@@ -15,6 +15,9 @@ Coveralls:
 *****
 
 
+![Supercontig_50](pinfsc50.png)
+
+
 VcfR is an R package intended to allow easy manipulation and visualization of variant call format (VCF) data.
 Functions are provided to rapidly read from and write to VCF files.
 Once VCF data is read into R a parser function extracts matrices from the VCF data for use with typical R functions.
@@ -54,7 +57,7 @@ To install use:
 
 
 
-The development vaerion can be installed through github:
+The development version can be installed through github:
 
     devtools::install_github(repo="knausb/vcfR")
     library(vcfR)
@@ -103,27 +106,36 @@ If you know of a software that I have not included on this list, particularly if
 
 **Genomic variant callers:**
 
+* [Cortex](http://cortexassembler.sourceforge.net/)
+* [freebayes](https://github.com/ekg/freebayes)
 * [GATK haplotype caller](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php)
 * [GATK MuTect2](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php)
 * [GATK GenotypeGVCFs](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_variantutils_GenotypeGVCFs.php)
-* [freebayes](https://github.com/ekg/freebayes)
-* [Samtools](http://www.htslib.org/)
 * [LoFreq](http://csb5.github.io/lofreq/)
-* [Cortex](http://cortexassembler.sourceforge.net/)
+* [Platypus](http://www.well.ox.ac.uk/platypus)
+* [Samtools](http://www.htslib.org/)
 * [VarScan2](http://dkoboldt.github.io/varscan/)
 
 
 **Restriction site associated DNA markers (e.g., RADseq, GBS):**
 
-* [Tassel](http://www.maizegenetics.net/#!tassel/c17q9)
 * [Stacks](http://catchenlab.life.illinois.edu/stacks/)
+* [Tassel](http://www.maizegenetics.net/#!tassel/c17q9)
 
+**Manipulation of VCF data:**
 
-**Manipulation**
+* [Beagle v4.1](https://faculty.washington.edu/browning/beagle/beagle.html) Inputs VCF genotypes and outputs phased genotypes to VCF format
+* [pegas::read.vcf](https://cran.r-project.org/package=pegas) Population and Evolutionary Genetics Analysis System
+* [PyVCF](https://pyvcf.readthedocs.io/en/latest/)
+* [SnpEff](http://snpeff.sourceforge.net/) Genetic variant annotation and effect prediction toolbox
+* [Picard](http://broadinstitute.github.io/picard/index.html) A set of command line tools (in Java) for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF
+* [VCFtools](https://vcftools.github.io/) General manipulation and analysis
+* [VariantAnnotation::readVcf](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) Bioconductor package for annotating variants
 
-* [VCFtools](https://vcftools.github.io/) General manipulation and analysis.
-* [Beagle v4.1](https://faculty.washington.edu/browning/beagle/beagle.html) Inputs VCF genotypes and outputs phased genotypes to VCF format.
+**R packages that read VCF data**
 
+* [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html)
+* [pegas](https://cran.r-project.org/package=pegas)
 
 ------
 

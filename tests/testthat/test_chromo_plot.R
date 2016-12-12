@@ -1,5 +1,7 @@
+#
+#
 #library("testthat")
-context("chromo plotting function")
+context("chromo_plot  functions")
 
 library(vcfR)
 data("vcfR_example")
@@ -72,6 +74,38 @@ test_that("chromo works, variant and annotation data",{
   expect_true( is.null(plot1) )
   plot2 <- chromo( chrom, boxp = TRUE )
   expect_true( is.null(plot2) )
+})
+
+
+test_that("chromo works, vcf with no variants, seq or ann",{
+  data("vcfR_example")
+  vcf <- vcf[0,]
+  
+#  chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+  chrom <- create.chromR(name="Supercontig", vcf=vcf, verbose=FALSE)
+#  chrom@len
+  
+  chrom <- proc.chromR(chrom, verbose = FALSE)
+  
+  expect_is(chrom, 'chromR')
+  expect_equal( nrow(chrom@win.info), 0 )
+  
+})
+
+
+
+test_that("chromo works, vcf with no variants",{
+  data("vcfR_example")
+  vcf <- vcf[0,]
+  
+  chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+# chrom@len
+  
+  chrom <- proc.chromR(chrom, verbose = FALSE)
+  
+  expect_is(chrom, 'chromR')
+  expect_gt( nrow(chrom@win.info), 0 )
+  
 })
 
 

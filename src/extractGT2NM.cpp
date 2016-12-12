@@ -183,15 +183,19 @@ std::vector < std::string > get_allele_vector( Rcpp::String ref,
 }
 
 
-std::string gt2alleles( Rcpp::String gt, std::vector< std::string > allele_vector, char allele_sep )
+std::string gt2alleles( Rcpp::String gt, 
+                        std::vector< std::string > allele_vector )
 {
   // gt is a genotpye (e.g., 0/0, 1/2, 1/.).
   // allele_vector is a concatenation of the REF and ALT data.
+  
+  // Deprecated:
   // allele_sep specifies the allele delimiter.
   
   // Recast allele_sep (char) to sep (std::string).
-  std::string sep = std::string(1, allele_sep);
-  
+//  std::string sep = std::string(1, allele_sep);
+  std::string sep = "/";
+    
   // Create a std::string NA character.
   std::string na_allele = ".";
 
@@ -199,7 +203,14 @@ std::string gt2alleles( Rcpp::String gt, std::vector< std::string > allele_vecto
   // This results in the vector gt_vector.
   std::string gt2 = gt;
   std::vector < std::string > gt_vector;
-  vcfRCommon::strsplit( gt2, gt_vector, allele_sep );
+//  vcfRCommon::strsplit( gt2, gt_vector, allele_sep );
+  
+  int unphased_as_na = 0; // 0 == FALSE
+  vcfRCommon::gtsplit( gt2, gt_vector, unphased_as_na );
+  
+  std::vector < std::string > delim_vector;
+  vcfRCommon::gtdelim( gt2, delim_vector );
+  
   
 //  Rcpp::Rcout << "Made it.!\n";
 //  Rcpp::Rcout << "  gt_vector[0]" << gt_vector[0] << "\n";
@@ -223,25 +234,35 @@ std::string gt2alleles( Rcpp::String gt, std::vector< std::string > allele_vecto
   }
   
   // If we're greater than haploid.
+//  Rcpp::Rcout << "  gt_vector.size(): " << gt_vector.size() << "\n";
   if( gt_vector.size() > 1 )
   {
     for( int i=1; i<gt_vector.size(); i++ )
     {
-//      if ( ! (std::istringstream(gt_vector[i]) >> allele_number) ) allele_number = 0;
-//      gt3.append( sep );
-//      gt3.append( allele_vector[ allele_number ] );
+//      Rcpp::Rcout << "  gt_vector[i]: " << gt_vector[i] << "\n";
       if( gt_vector[i].compare( na_allele ) == 0 ){
+        // Append a missing allele (NA).
+        sep = gt2[ gt3.length() ];
+        sep = delim_vector[ i - 1 ];
         gt3.append( sep );
         gt3.append( na_allele );
       } else if ( ! (std::istringstream( gt_vector[i] ) >> allele_number) ){
         //  
-        Rcpp::Rcout << "Couldn't convert string to int!\n";
+//        Rcpp::Rcout << "Couldn't convert string to int!\n";
+        sep = gt2[ gt3.length() ];
+        sep = delim_vector[ i - 1 ];
         gt3.append( sep );
         gt3.append( na_allele );
       } else {
+//        Rcpp::Rcout << "    Appending allele " << i; // << "\n";
+        sep = gt2[ gt3.length() ];
+        sep = "_";
+        sep = delim_vector[ i - 1 ];
+//        Rcpp::Rcout << ", sep: " << sep;
         gt3.append( sep );
-        std::istringstream(gt_vector[i]) >> allele_number;
+        std::istringstream( gt_vector[i] ) >> allele_number;
         gt3.append( allele_vector[ allele_number ] );
+//        Rcpp::Rcout << "\n";
       }
     }
   }
@@ -255,14 +276,14 @@ std::string gt2alleles( Rcpp::String gt, std::vector< std::string > allele_vecto
 Rcpp::StringMatrix extract_GT_to_CM2( Rcpp::StringMatrix fix,
                                          Rcpp::StringMatrix gt,
                                          std::string element="DP",
-                                         char allele_sep = '/',
                                          int alleles = 0,
-                                         int extract = 1 ) {
+                                         int extract = 1,
+                                         int convertNA = 1) {
   int i = 0;
   int j = 0;
 
   // Initialize a return matrix.
-  // The first column of gt is FORMAT, 
+  // The first column of gt is FORMAT,
   // so the return_matrix will have one less column than in gt.
   // We'll preserve the column names of gt in return_matrix.
   Rcpp::StringMatrix return_matrix( gt.nrow(), gt.ncol() - 1 );
@@ -293,18 +314,47 @@ Rcpp::StringMatrix extract_GT_to_CM2( Rcpp::StringMatrix fix,
       } else {
         return_matrix(i, j-1) = extractElementS( gt(i, j), position, extract );
         // Manage NAs.
-        if( return_matrix(i, j-1) == "." ){ return_matrix(i, j-1) = NA_STRING; }
+        if( return_matrix(i, j-1) == "." & convertNA == 1 ){
+          return_matrix(i, j-1) = NA_STRING;
+        }
+        
+        if( element.compare("GT") == 0 & convertNA == 1 ){
+//          Rcpp::Rcout << "Looking for a GT.\n";
+          std::vector < std::string > allele_vec;
+          int unphased_as_na = 0; // 0 == FALSE
+          std::string my_string;
+          if( return_matrix(i, j-1) == NA_STRING ){
+            my_string = ".";
+          } else {
+            my_string = return_matrix(i, j-1);
+          }
+          
+//          Rcpp::Rcout << "  my_string: " << my_string << "\n";
+          vcfRCommon::gtsplit( my_string, allele_vec, unphased_as_na );
+          int gtNA = 1;
+          for( int k = 0; k < allele_vec.size(); k++ ){
+//            Rcpp::Rcout << "allele_vec[k]: " << allele_vec[k] << "\n";
+            if( allele_vec[k] != "." ){ gtNA = 0; }
+          }
+          if( gtNA == 1 ){
+            return_matrix(i, j-1) = NA_STRING;
+          }
+        }
+        
         // Convert to alleles
         if( alleles == 1 )
         {
           std::string gt_string = Rcpp::as< std::string >( return_matrix(i, j-1) );
         
-//        Rcpp::Rcout << "gt_string: " << gt_string << "\n";
+//          Rcpp::Rcout << "gt_string: " << gt_string << "\n";
 //        Rcpp::Rcout << "test ic_naC: " << gt_string == na_string << "\n";
         
-          gt_string = gt2alleles( gt_string, allele_vector, allele_sep );
+          gt_string = gt2alleles( gt_string, allele_vector );
+//          Rcpp::Rcout << "  gt_string: " << gt_string << "\n";
+//          gt_string = gt2alleles( gt_string, allele_vector, allele_sep );
           return_matrix(i, j-1) = gt_string;
         }
+        
       }
     }
 
@@ -345,9 +395,11 @@ NumericMatrix CM_to_NM(CharacterMatrix x) {
 Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
                                 Rcpp::StringVector alt,
                                 Rcpp::StringMatrix gt,
-                                char gt_split,
+                                int unphased_as_NA,
                                 int verbose) {
-
+  
+  // Rcpp::Rcout << "In extract_haps.\n";
+  
   int ploidy = 1;
   int i = 0;
   int j = 0;
@@ -360,11 +412,12 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
     i++;
   }
   std::string temp = Rcpp::as< std::string >(gt(i,1));
-//  Rcpp:Rcout << "GT to test ploidy: " << temp << "\n";
+  // Rcpp:Rcout << "GT to test ploidy: " << temp << "\n";
 
   // Count elements to determine ploidy.
   for(i=0; i<temp.length(); i++){
-    if( temp[i] == gt_split ){ploidy++;}
+//    if( temp[i] == gt_split ){ploidy++;}
+    if( temp[i] == '|' | temp[i] == '/' ){ploidy++;}
   }
 
   if(ploidy == 1){
@@ -376,8 +429,8 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
 
   // Initialize return structure
   Rcpp::StringMatrix haps(gt.nrow(), gt.ncol() * ploidy);
-
-  Rcpp::List gt_names = gt.attr("dimnames");
+  
+    Rcpp::List gt_names = gt.attr("dimnames");
   Rcpp::StringVector sample_names = gt_names(1);
 
   // Manage haplotype names with postfixed number.
@@ -396,7 +449,6 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
     j++;
   }
   haps.attr("dimnames") = Rcpp::List::create(gt_names(0), haplo_names);
-
 
   // Iterate over variants (rows of gt)
   // Each variant has a REF and ALT, so this can't be by sample.
@@ -421,8 +473,7 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
     for(j=0; j<gt.ncol(); j++){
       Rcpp::checkUserInterrupt();
       std::vector < std::string > al_vec;
-      char al_split = gt_split; // Must be single quotes!
-
+      
       if( gt(i, j) == NA_STRING ){
         hap_num = 0;
         while(hap_num < ploidy){
@@ -432,11 +483,17 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
         }
       } else {
         std::string line = Rcpp::as< std::string >(gt(i, j));
-        vcfRCommon::strsplit(line, al_vec, al_split);
+//        Rcpp::Rcout << "Genotype: " << line << "\n";
+        vcfRCommon::gtsplit(line, al_vec, unphased_as_NA);
         hap_num = 0;
         while(hap_num < ploidy){
+//          Rcpp::Rcout << "  hap_num: " << hap_num << "\n";
+//          Rcpp::Rcout << "    allele: ";
+//          Rcpp::Rcout << al_vec[hap_num] ;
+//          Rcpp::Rcout << "\n";
           // Manage missing alleles.
           if( al_vec[hap_num] == "." ){
+//            Rcpp::Rcout << "  allele: " << al_vec[hap_num] << "\n";
             haps(i, hap_col) = NA_STRING;
           } else {
             int al_num = atoi(al_vec[hap_num].c_str());
@@ -445,8 +502,10 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
           hap_num++;
           hap_col++;
         }
-      }
+      }      
+      
 
+      
     }
     if(i % nreport == 0 && verbose == 1){
       Rcout << "\rVariant " << i << " processed";
@@ -455,6 +514,9 @@ Rcpp::StringMatrix extract_haps(Rcpp::StringVector ref,
   if(verbose == 1){
     Rcout << "\rVariant " << i << " processed\n";
   }
+
+
   
   return(haps);
 }
+

@@ -7,7 +7,7 @@
 \title{Read and write vcf format files}
 \usage{
 read.vcfR(file, limit = 1e+07, nrows = -1, skip = 0, cols = NULL,
-  verbose = TRUE)
+  convertNA = TRUE, verbose = TRUE)
 
 write.vcf(x, file = "", mask = FALSE, APPEND = FALSE)
 }
@@ -21,6 +21,8 @@ write.vcf(x, file = "", mask = FALSE, APPEND = FALSE)
 \item{skip}{integer specifying the number of rows (variants) to skip before beginning to read data.}
 
 \item{cols}{vector of column numbers to extract from file.}
+
+\item{convertNA}{logical specifying to convert VCF missing data to NA.}
 
 \item{verbose}{report verbose progress.}
 
@@ -55,6 +57,14 @@ If you want a usable vcfR object you will want to always include nine (the FORMA
 If you do not include column nine you may experience reduced functionality.
 
 
+According to the VCF specification \strong{missing data} are encoded by a period (".").
+Within the R language, missing data can be encoded as NA.
+The parameter `convertNA` allows the user to either retain the VCF representation or the R representation of missing data.
+Note that the conversion only takes place when the entire value can be determined to be missing.
+For example, ".|.:48:8:51,51" would be retained because the missing genotype is accompanied by other delimited information.
+In contrast, ".|." should be converted to NA when \code{convertNA = TRUE}.
+
+
 The function \strong{write.vcf} takes an object of either class vcfR or chromR and writes the vcf data to a vcf.gz file (gzipped text).
 If the parameter 'mask' is set to FALSE, the entire object is written to file.
 If the parameter 'mask' is set to TRUE and the object is of class chromR (which has a mask slot), this mask is used to subset the data.
@@ -81,9 +91,9 @@ setwd( orig_dir )
 }
 \seealso{
 CRAN:
-\href{http://cran.r-project.org/package=pegas}{pegas}::read.vcf,
-\href{http://cran.r-project.org/package=PopGenome}{PopGenome}::readVCF,
-\href{http://cran.r-project.org/package=data.table}{data.table}::fread
+\href{https://cran.r-project.org/package=pegas}{pegas}::read.vcf,
+\href{https://cran.r-project.org/package=PopGenome}{PopGenome}::readVCF,
+\href{https://cran.r-project.org/package=data.table}{data.table}::fread
 
 Bioconductor:
 \href{http://www.bioconductor.org/packages/release/bioc/html/VariantAnnotation.html}{VariantAnnotation}::readVcf
