@@ -6,6 +6,9 @@ On CRAN:
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vcfR)](https://cran.r-project.org/package=vcfR)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/vcfR)](https://cran.r-project.org/package=vcfR)
 
+RDocumentation:
+ [![Rdoc](http://www.rdocumentation.org/badges/version/vcfR)](http://www.rdocumentation.org/packages/vcfR) 
+
 Travis-CI:
 [![Travis-CI Build Status](https://travis-ci.org/knausb/vcfR.png?branch=master)](https://travis-ci.org/knausb/vcfR)
 
@@ -15,7 +18,7 @@ Coveralls:
 *****
 
 
-![Supercontig_50](pinfsc50.png)
+![Supercontig_50](tools/pinfsc50.png)
 
 
 VcfR is an R package intended to allow easy manipulation and visualization of variant call format (VCF) data.
@@ -40,10 +43,15 @@ These tools are provided to aid researchers in rapidly surveying the quality and
 With this information in hand, researchers should be able to determine criteria for hard filtering in order to attempt to maximize biological variation and minimize technical variation.
 
 
+## Documentation
+
+Documentation for vcfR can now be found here: [vcfR_documentation](https://knausb.github.io/vcfR_documentation/).
+
+If you think you've found a bug, please see [reporting an issue](https://knausb.github.io/vcfR_documentation/reporting_issue.html).
+
 ## Publication
 
-Knaus, Brian J., and Niklaus J. Grunwald. In press. VCFR: a package to manipulate and visualize variant call format data in R. Molecular Ecology Resources. http://dx.doi.org/10.1111/1755-0998.12549.
-
+Knaus, Brian J., and Niklaus J. Grunwald. 2017. VCFR: a package to manipulate and visualize variant call format data in R. Molecular Ecology Resources 17(1):44-53. http://dx.doi.org/10.1111/1755-0998.12549.
 
 Knaus, Brian J., and Niklaus J. Grunwald. 2016. VcfR: an R package to manipulate and visualize VCF format data. bioRxiv: 041277. http://dx.doi.org/10.1101/041277.
 
@@ -129,6 +137,7 @@ If you know of a software that I have not included on this list, particularly if
 * [PyVCF](https://pyvcf.readthedocs.io/en/latest/)
 * [SnpEff](http://snpeff.sourceforge.net/) Genetic variant annotation and effect prediction toolbox
 * [Picard](http://broadinstitute.github.io/picard/index.html) A set of command line tools (in Java) for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF
+* [VCF-kit](https://github.com/AndersenLab/VCF-kit) VCF-kit is a command-line based collection of utilities for performing analysis on Variant Call Format (VCF) files.
 * [VCFtools](https://vcftools.github.io/) General manipulation and analysis
 * [VariantAnnotation::readVcf](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) Bioconductor package for annotating variants
 

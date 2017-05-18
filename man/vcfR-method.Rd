@@ -2,27 +2,28 @@
 % Please edit documentation in R/vcfR-method.R
 \docType{methods}
 \name{show,vcfR-method}
-\alias{[,vcfR,ANY,ANY,ANY-method}
-\alias{dim,vcfR-method}
-\alias{dim.vcfR}
+\alias{show,vcfR-method}
+\alias{head}
 \alias{head,vcfR-method}
-\alias{nrow,vcfR-method}
-\alias{nrow.vcfR}
+\alias{[,vcfR,ANY,ANY,ANY-method}
 \alias{plot,vcfR-method}
-\alias{plot.vcfR}
-\alias{rbind2,vcfR,ANY-method}
 \alias{rbind2,vcfR,missing-method}
+\alias{rbind2.vcfR}
+\alias{rbind2,vcfR,ANY-method}
+\alias{rbind2.vcfR}
 \alias{rbind2,vcfR,vcfR-method}
 \alias{rbind2.vcfR}
-\alias{show,vcfR-method}
-\alias{vcfR-method}
-\title{vcfR-method}
+\alias{dim,vcfR-method}
+\alias{dim.vcfR}
+\alias{nrow,vcfR-method}
+\alias{nrow.vcfR}
+\title{show}
 \usage{
 \S4method{show}{vcfR}(object)
 
 \S4method{head}{vcfR}(x, n = 6, maxchar = 80)
 
-\S4method{[}{vcfR,ANY,ANY,ANY}(x, i, j, ..., drop = TRUE)
+\S4method{[}{vcfR,ANY,ANY,ANY}(x, i, j, samples = NULL, ..., drop)
 
 \S4method{plot}{vcfR}(x, y, ...)
 
@@ -37,32 +38,28 @@
 \S4method{nrow}{vcfR}(x)
 }
 \arguments{
-\item{object}{object1 of class vcfR}
+\item{object}{a vcfR object}
 
 \item{x}{object of class vcfR}
 
 \item{n}{number of rows to print}
 
-\item{maxchar}{maximum number of characters to print per line
-
-
-
-
-
-##### Method show #####}
+\item{maxchar}{maximum number of characters to print per line}
 
 \item{i}{vector of rows (variants) to include}
 
 \item{j}{vector of columns (samples) to include}
 
-\item{...}{Arguments to be passed to methods}
+\item{samples}{vector (numeric, character or logical) specifying samples, see details}
+
+\item{...}{arguments to be passed to other methods}
 
 \item{drop}{delete the dimensions of an array which only has one level}
 
 \item{y}{not used}
 }
 \description{
-Methods to show, subset or plot data from objects of class vcfR
+Display a summary of a vcfR object.
 
 \strong{head} returns the first parts of an object of class vcfR.
 
@@ -87,6 +84,15 @@ The columns in the fix slot will not be subset by j.
 The parameter j is a vector used to subset the columns of the gt slot.
 Note that it is essential to include the first column here (FORMAT) or downsream processes will encounter trouble.
 
+The \strong{samples} parameter allows another way to select samples.
+Because the first column of the gt section is the FORMAT column you typically need to include that column and sample numbers therefore begin at two.
+Use of the samples parameter allows you to select columns by a vector of numerics, logicals or characters.
+When numerics are used the samples can be selected starting at one.
+The function will then add one to this vector and include one to select the desired samples and the FORMAT column.
+When a vector of characters is used it should contain the desired sample names.
+The function will add the FORMAT column if it is not the first element.
+When a vector of logicals is used a TRUE will be added to the vector to ensure the FORMAT column is selected.
+Note that specification of samples will override specification of j.
+
 The \strong{plot} method generates a histogram from data found in the 'QUAL' column from the 'fix' slot.
 }
-

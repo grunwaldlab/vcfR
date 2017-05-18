@@ -2,7 +2,7 @@
 #' @rdname chromR-method
 #' @title chromR-method
 #'
-#' @aliases chromR-method
+#' @aliases chromR,chromR-method
 #'
 #' @description Methods that act on objects of class chromR
 #'
@@ -69,6 +69,7 @@ setMethod( f="show",
 
 
 #' @rdname chromR-method
+#' @aliases plot
 #' @export
 #'
 setMethod( f="plot",
@@ -85,21 +86,21 @@ setMethod( f="plot",
     }
 
     graphics::par(mfrow=c(2,2))
-    if( length(DP) > 0 ){
+    if( length(stats::na.omit(DP)) > 0 ){
       graphics::hist(DP, col=3, main="Read depth (DP)", xlab="")
       graphics::rug(DP)
     } else {
       plot(1:2,1:2, type='n', xlab="", ylab="")
       graphics::title(main="No depths found")
     }
-    if( length(MQ) > 0 ){
+    if( length(stats::na.omit(MQ)) > 0 ){
       graphics::hist(MQ, col=4, main="Mapping quality (MQ)", xlab="")
       graphics::rug(MQ)
     } else {
       plot(1:2,1:2, type='n', xlab="", ylab="")
       graphics::title(main="No mapping qualities found")
     }
-    if( length(QUAL) > 0 ){
+    if( length(stats::na.omit(QUAL)) > 0 ){
       graphics::hist(QUAL, col=5, main="Quality (QUAL)", xlab="")
       graphics::rug(QUAL)
     } else {
@@ -114,6 +115,7 @@ setMethod( f="plot",
       graphics::title(main="No SNP densities found")
     }
     graphics::par(mfrow=c(1,1))
+    return(invisible(NULL))
   }
 )
 
@@ -227,6 +229,18 @@ setMethod(f="names<-",
             }
             return(x)
           }
+)
+
+
+
+#' @rdname chromR-method
+#' @export
+#'
+setMethod( f="length",
+  signature = "chromR",
+  definition=function(x){
+    return(x@len)
+  }
 )
 
 

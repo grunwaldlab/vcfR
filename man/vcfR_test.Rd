@@ -7,7 +7,7 @@
 \title{Test data for vcfR.}
 \format{A vcfR object}
 \description{
-A test file containing a diversity of examples inended to tst functionality.
+A test file containing a diversity of examples intended to test functionality.
 }
 \details{
 \itemize{
@@ -30,4 +30,3 @@ data(vcfR_test)
 
 }
 \keyword{datasets}
-

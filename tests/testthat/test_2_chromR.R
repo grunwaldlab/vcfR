@@ -12,7 +12,7 @@ data("vcfR_example")
 #data(vcfR_example)
 
 test_that("Create a null chromR",{
-  chrom <- new(Class="chromR")
+  chrom <- methods::new(Class="chromR")
   expect_is(chrom, "chromR")
   expect_is(chrom@vcf, "vcfR")
   expect_is(chrom@seq, "NULL")
@@ -149,6 +149,24 @@ test_that("We implemented the mask",{
   expect_true( sum(chrom@var.info[,'mask']) < nrow(chrom@var.info) )
 })
 
+chrom_preserve_mask <- masker(chrom, min_QUAL = 40, preserve = TRUE)
+chrom_new_mask <- masker(chrom, min_QUAL = 40, preserve = FALSE)
+
+test_that("preserve = TRUE preserves the original mask ", {
+  ori_mask <- chrom@var.info[, 'mask']
+  add_mask <- chrom_preserve_mask@var.info[, 'mask']
+  # adding restrictions reduces variants
+  expect_lt(sum(add_mask), sum(ori_mask))
+  # on comparison, the original masked variants are kept
+  expect_equal(sum(ori_mask | add_mask), sum(ori_mask))
+})
+
+test_that("preserve = FALSE removes the mask", {
+  ori_mask <- chrom@var.info[, 'mask']
+  new_mask <- chrom_new_mask@var.info[, 'mask']
+  expect_gt(sum(new_mask), sum(ori_mask))
+  expect_gt(sum(ori_mask | new_mask), sum(new_mask))
+})
 
 
 ##### ##### ##### ##### #####
@@ -218,7 +236,7 @@ test_that("chromR2vcfR works",{
   test <- chromR2vcfR(chrom, use.mask = TRUE)
 
   sum(chrom@var.info$mask)
-nrow(test)
+  nrow(test)
 })
 
 ##### ##### ##### ##### #####

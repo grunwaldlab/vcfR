@@ -1,54 +1,12 @@
 
 
-## Resubmission
-This is a resubmission.
-
-* checking files in 'vignettes' ... WARNING
-Files in the 'vignettes' directory newer than all files in 'inst/doc':
-  'converting_data.Rmd', 'intro_to_vcfR.Rmd', 'vcf_data.Rmd',
-    'workflow.Rmd'
-Files in this directory were deleted and the package was rebuilt.
-
-## Resubmission
-This is a resubmission.
-Actually, this was delayed some due to the holidays and I had made some other updates, so I've bumped teh version from 1.3.0 to 1.4.0.
-Apologies if this adds complexity.
-
-This version ERRORed on r-oldrel-windows-ix86+x86_64.
-This was R version 3.2.5 (2016-04-14).
-The ERROR was a subscript out of bounds ERROR.
-This was addressed by changing the index.
-
-Prof Brian Ripley brought to my attention that I have new memory access issues:
-The memory-access errors are new this version, and there is also undefined behavour (trying to coerce NaN to integer).
-I believe I have addressed these problems in this update.
-
-## Resubmission
-This is a resubmission. In this version I have:
-
-Changed:
-http://cran.r-project.org/package=pinfsc50
-to:
-https://cran.r-project.org/package=pinfsc50
-in vcfR.R to respect the CRAN URL cannonical form.
-
-The files in 'inst/doc' have been deleted and rebuilt.
-
-
 ## Test environments
-* local OS X install, R 3.3.2
-* local ubuntu 16.04 LTS, R 3.3.2
-* local ubuntu 16.04 LTS, R 3.2.5
-* ubuntu 12.04 (on travis-ci), R 3.3.1
+* local ubuntu 16.04 LTS, R 3.4.0
+* local OS X install, R 3.4.0
+* ubuntu 12.04.5 (on travis-ci), R 3.4.0
+* winbuilder 3.4.0
+* winbuilder devel (2017-05-16 r72684)
 * rhub::check( platform = "ubuntu-gcc-devel" )
-* rhub::check( platform = "windows-x86_64-release" )
-* rhub::check( platform = "windows-x86_64-devel" )
-
-* rhub::check( platform = "windows-x86_64-oldrel" ) 
-This last environment failed to build.
-The failure does not appear due to this package.
-I've created GitHub issue (#62).
-The Rhub maintainer is working on this.
 
 
 ## R CMD check results
@@ -62,8 +20,9 @@ Maintainer: ‘Brian J. Knaus <briank.lists@gmail.com>’
 * checking installed package size ... NOTE
   installed size is  8.6Mb
   sub-directories of 1Mb or more:
-    doc    2.2Mb
+    doc    3.0Mb
     libs   5.7Mb
+
 
 There are 8 vignettes (HTML) which contribute to the 2.8Mb in doc.
 These could be migrated to a separate documentation package.
@@ -79,7 +38,7 @@ Possibly mis-spelled words in DESCRIPTION:
   genomic (7:51)
 
 I have reviewed these words and feel they are spelled correctly.
-'DNAbin' referr to an object of class ape::DNAbin.
+'DNAbin' refers to an object of class ape::DNAbin.
 'VCF' refers to the variant call format specification, a format of file handled by this package.
 'VcfR' refers to this package.
 'genlight' refers to an object of class adegenet::genlight.
@@ -89,12 +48,9 @@ I have reviewed these words and feel they are spelled correctly.
 ## Downstream dependencies
 
 I have also run R CMD check on downstream dependencies of vcfR
-All packages that I could install passed except:
+All packages that I could install passed:
 
-* pcadapt: 
-* checking installed package size ... NOTE
-  installed size is  5.1Mb
-Does not appear to be related to vcfR
+* pcadapt: no errors or warnings
 
 
 ## Memory-access errors
@@ -107,11 +63,13 @@ R -d "valgrind --leak-check=full --vgdb-error=1" -f tests/testthat/test_conversi
 On various suspect functions.
 
 
-## Thank you CRAN core Team!
+## Thank you CRAN Core Team!
 
 [CRAN Repository Policy](https://cran.r-project.org/web/packages/policies.html) states that all correspondence should be with CRAN and not members of the team.
 However, I think its polite to thank those who have helped this project.
 So I've decided to start a list of thanks with the hope that these individuals may see this in the future.
+
+v1.5.0 Thank you Kurt Hornik for helping me!
 
 v1.4.0 Thank you Uwe Ligges and Kurt Hornik for helping me!
 

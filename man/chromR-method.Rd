@@ -2,12 +2,14 @@
 % Please edit documentation in R/chromR-method.R
 \docType{methods}
 \name{show,chromR-method}
-\alias{chromR-method}
+\alias{show,chromR-method}
+\alias{chromR,chromR-method}
+\alias{plot,chromR-method}
+\alias{plot}
+\alias{print,chromR-method}
 \alias{head,chromR-method}
 \alias{names<-,chromR,character-method}
-\alias{plot,chromR-method}
-\alias{print,chromR-method}
-\alias{show,chromR-method}
+\alias{length,chromR-method}
 \title{chromR-method}
 \usage{
 \S4method{show}{chromR}(object)
@@ -19,6 +21,8 @@
 \S4method{head}{chromR}(x)
 
 \S4method{names}{chromR,character}(x) <- value
+
+\S4method{length}{chromR}(x)
 }
 \arguments{
 \item{object}{an object of class chromR}
@@ -37,4 +41,3 @@ Methods that act on objects of class chromR
 \details{
 Methods that act on objects of class chromR.
 }
-
