@@ -5,12 +5,19 @@
 On CRAN:
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vcfR)](https://cran.r-project.org/package=vcfR)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/vcfR)](https://cran.r-project.org/package=vcfR)
+[![](http://cranlogs.r-pkg.org/badges/vcfR)](https://cran.r-project.org/package=vcfR)
+
+Depsy:
+[![Research software impact](http://depsy.org/api/package/cran/vcfR/badge.svg)](http://depsy.org/package/r/vcfR)
 
 RDocumentation:
  [![Rdoc](http://www.rdocumentation.org/badges/version/vcfR)](http://www.rdocumentation.org/packages/vcfR) 
 
-Travis-CI:
+Travis-CI (Ubuntu Linux):
 [![Travis-CI Build Status](https://travis-ci.org/knausb/vcfR.png?branch=master)](https://travis-ci.org/knausb/vcfR)
+
+Appveyor (Windows):
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/knausb/vcfR?branch=master&svg=true)](https://ci.appveyor.com/project/knausb/vcfR)
 
 Coveralls:
 [![Coverage Status](https://coveralls.io/repos/github/knausb/vcfR/badge.svg?branch=master)](https://coveralls.io/github/knausb/vcfR?branch=master)

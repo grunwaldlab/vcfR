@@ -93,11 +93,16 @@ vcf <- extract.indels(vcf)
 getFIX(vcf)
 
 data(vcfR_test)
+vcfR_test@fix[1,'ALT'] <- "<NON_REF>"
+vcf <- extract.indels(vcfR_test)
+getFIX(vcf)
+
+data(vcfR_test)
 extract.haps(vcfR_test, unphased_as_NA = FALSE)
 extract.haps(vcfR_test)
 
 
 }
 \seealso{
-\code{\link{is.polymorphic}}
+\code{is.polymorphic}
 }

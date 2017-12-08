@@ -5,19 +5,21 @@
 \title{Convert vcfR to DNAbin}
 \usage{
 vcfR2DNAbin(x, extract.indels = TRUE, consensus = FALSE,
-  extract.haps = TRUE, unphased_as_NA = TRUE, ref.seq = NULL,
-  start.pos = NULL, verbose = TRUE)
+  extract.haps = TRUE, unphased_as_NA = TRUE, asterisk_as_del = FALSE,
+  ref.seq = NULL, start.pos = NULL, verbose = TRUE)
 }
 \arguments{
 \item{x}{an object of class chromR or vcfR}
 
-\item{extract.indels}{logical, at present, the only option is TRUE}
+\item{extract.indels}{logical indicating to remove indels (TRUE) or to include them while retaining alignment}
 
-\item{consensus}{logical, at present, the only option is FALSE}
+\item{consensus}{logical, indicates whether an IUPAC ambiguity code should be used for diploid heterozygotes}
 
 \item{extract.haps}{logical specifying whether to separate each genotype into alleles based on a delimiting character}
 
 \item{unphased_as_NA}{logical indicating how to handle alleles in unphased genotypes}
+
+\item{asterisk_as_del}{logical indicating that the asterisk allele should be converted to a deletion (TRUE) or NA (FALSE)}
 
 \item{ref.seq}{reference sequence (DNAbin) for the region being converted}
 
@@ -59,7 +61,7 @@ Because the data in the vcfR object will be using a chromosomal coordinate syste
 
 
 Conversion of \strong{diploid data} presents a number of scenarios.
-When the option \code{consensus} is TRUE, each genotype is split into two alleles and the two alleles are converted into their IUPAC ambiguity code.
+When the option \code{consensus} is TRUE and \code{extract.haps} is FALSE, each genotype is split into two alleles and the two alleles are converted into their IUPAC ambiguity code.
 This results in one sequence for each diploid sample.
 This may be an appropriate path when you have unphased data.
 Note that functions called downstream of this choice may handle IUPAC ambiguity codes in unexpected manners.
@@ -69,6 +71,13 @@ This results in two sequences per diploid sample.
 Note that this really only makes sense if you have phased data.
 The options ref.seq and start.pos are used as in halpoid data.
 
+
+When a variant overlaps a deletion it may be encoded by an \strong{asterisk allele (*)}.
+The GATK site covers this in a post on \href{https://gatkforums.broadinstitute.org/gatk/discussion/6926/spanning-or-overlapping-deletions-allele}{Spanning or overlapping deletions} ].
+This is handled in vcfR by allowing the user to decide how it is handled with the paramenter \code{asterisk_as_del}.
+When \code{asterisk_as_del} is TRUE this allele is converted into a deletion ('-').
+When \code{asterisk_as_del} is FALSE the asterisk allele is converted to NA.
+If \code{extract.indels} is set to FALSE it should override this decision.
 
 
 Conversion of \strong{polyploid data} is currently not supported.

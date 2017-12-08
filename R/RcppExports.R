@@ -45,27 +45,42 @@
 #' 
 #' @export
 AD_frequency <- function(ad, delim = ",", allele = 1L, sum_type = 0L, decreasing = 1L) {
-    .Call('vcfR_AD_frequency', PACKAGE = 'vcfR', ad, delim, allele, sum_type, decreasing)
+    .Call(`_vcfR_AD_frequency`, ad, delim, allele, sum_type, decreasing)
 }
 
-extract_GT_to_CM <- function(x, element = "DP") {
-    .Call('vcfR_extract_GT_to_CM', PACKAGE = 'vcfR', x, element)
+#' @export
+.write_fasta <- function(seq, seqname, filename, rowlength = 80L, verbose = 1L, depr = 1L) {
+    invisible(.Call(`_vcfR_write_fasta`, seq, seqname, filename, rowlength, verbose, depr))
 }
 
-extract_GT_to_CM2 <- function(fix, gt, element = "DP", alleles = 0L, extract = 1L, convertNA = 1L) {
-    .Call('vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR', fix, gt, element, alleles, extract, convertNA)
+#' @export
+.elementNumber <- function(x, element = "GT") {
+    .Call(`_vcfR_elementNumber`, x, element)
 }
 
-CM_to_NM <- function(x) {
-    .Call('vcfR_CM_to_NM', PACKAGE = 'vcfR', x)
+#' @export
+.extract_GT_to_CM <- function(fix, gt, element = "DP", alleles = 0L, extract = 1L, convertNA = 1L) {
+    .Call(`_vcfR_extract_GT_to_CM`, fix, gt, element, alleles, extract, convertNA)
 }
 
-extract_haps <- function(ref, alt, gt, unphased_as_NA, verbose) {
-    .Call('vcfR_extract_haps', PACKAGE = 'vcfR', ref, alt, gt, unphased_as_NA, verbose)
+#' @export
+.CM_to_NM <- function(x) {
+    .Call(`_vcfR_CM_to_NM`, x)
 }
 
-grepa <- function() {
-    invisible(.Call('vcfR_grepa', PACKAGE = 'vcfR'))
+#' @export
+.extract_haps <- function(ref, alt, gt, unphased_as_NA, verbose) {
+    .Call(`_vcfR_extract_haps`, ref, alt, gt, unphased_as_NA, verbose)
+}
+
+#' @export
+.grepa <- function() {
+    invisible(.Call(`_vcfR_grepa`))
+}
+
+#' @export
+.shankaR <- function() {
+    invisible(.Call(`_vcfR_shankaR`))
 }
 
 #' 
@@ -95,19 +110,21 @@ grepa <- function() {
 #' Because this method is based on binning the data it does not rely on a distributional assumption.
 #' 
 #' 
-#' The parameter `lhs` specifyies whether the search for the bin of greatest density should be performed from the left hand side.
+#' The parameter \code{lhs} specifyies whether the search for the bin of greatest density should be performed from the left hand side.
 #' The default value of TRUE starts at the left hand side, or zero, and selects a new bin as having the greatest density only if a new bin has a greater density.
 #' If the new bin has an equal density then no update is made.
 #' This causees the analysis to select lower frequencies.
 #' When this parameter is set to FALSE ties result in an update of the bin of greatest density.
 #' This causes the analysis to select higher frequencies.
-#' It is recommended that when testing the most abundant allele (typically [0.5-1]) to use the default of TURE so that a low value is preferred.
+#' It is recommended that when testing the most abundant allele (typically [0.5-1]) to use the default of TRUE so that a low value is preferred.
 #' Similarly, when testing the less abundant alleles it is recommended to set this value at FALSE to preferentially select high values.
 #' 
 #' 
 #' @return 
-#' A list containing:
+#' A freq_peak object (a list) containing:
 #' \itemize{
+#'   \item The window size
+#'   \item The binwidth used for peak binning
 #'   \item a matrix containing window coordinates
 #'   \item a matrix containing peak locations
 #'   \item a matrix containing the counts of variants for each sample in each window
@@ -119,6 +136,9 @@ grepa <- function() {
 #' Alternatively, if `count = TRUE` the number of non-missing values in each window is reported.
 #' The number of non-mising values in each window may be used to censor windows containing low quantities of data.
 #' 
+#' @seealso
+#' peak_to_ploid,
+#' freq_peak_plot
 #' 
 #' @examples
 #' data(vcfR_example)
@@ -168,11 +188,12 @@ grepa <- function() {
 #' 
 #' @export
 freq_peak <- function(myMat, pos, winsize = 10000L, bin_width = 0.02, lhs = TRUE) {
-    .Call('vcfR_freq_peak', PACKAGE = 'vcfR', myMat, pos, winsize, bin_width, lhs)
+    .Call(`_vcfR_freq_peak`, myMat, pos, winsize, bin_width, lhs)
 }
 
-gt_to_popsum <- function(var_info, gt) {
-    .Call('vcfR_gt_to_popsum', PACKAGE = 'vcfR', var_info, gt)
+#' @export
+.gt_to_popsum <- function(var_info, gt) {
+    .Call(`_vcfR_gt_to_popsum`, var_info, gt)
 }
 
 #' @rdname is_het
@@ -182,7 +203,7 @@ gt_to_popsum <- function(var_info, gt) {
 #' 
 #' @export
 is_het <- function(x, na_is_false = TRUE) {
-    .Call('vcfR_is_het', PACKAGE = 'vcfR', x, na_is_false)
+    .Call(`_vcfR_is_het`, x, na_is_false)
 }
 
 #' 
@@ -195,14 +216,22 @@ is_het <- function(x, na_is_false = TRUE) {
 #' @param delim character that delimits values.
 #' @param count return the count of delimited records.
 #' @param record which (1-based) record to return.
-#' @param sort should the records be sorted prior to selecting the element?
+#' @param sort should the records be sorted prior to selecting the element (0,1)?
 #' @param decreasing should the values be sorted decreasing (1) or increasing (0)?
 #' 
 #' 
+#' @details 
+#' Split a matrix of delimited strings that represent numerics into numerics.
+#' The parameter \strong{count} returns a matrix of integers indicating how many delimited records exist in each element.
+#' This is intended to help if you do not know how many records are in each element particularly if there is a mixture of numbers of records.
+#' The parameter \strong{record} indicates which record to return (first, second, third, ...).
+#' The parameter \strong{sort} indicates whether the records in each element should be sorted (1) or not (0) prior to selection.
+#' When sorting has been selected \strong{decreasing} indicates if the sorting should be performed in a decreasing (1) or increasing (0) manner prior to selection.
 #' 
-#' @details Split a matrix of delimited strings.
 #' 
-#' @return A numeric matrix of numerics
+#' 
+#' 
+#' @return A numeric matrix
 #' 
 #' 
 #' @examples
@@ -225,62 +254,70 @@ is_het <- function(x, na_is_false = TRUE) {
 #' 
 #' @export
 masplit <- function(myMat, delim = ",", count = 0L, record = 1L, sort = 1L, decreasing = 1L) {
-    .Call('vcfR_masplit', PACKAGE = 'vcfR', myMat, delim, count, record, sort, decreasing)
+    .Call(`_vcfR_masplit`, myMat, delim, count, record, sort, decreasing)
 }
 
-NM2winNM <- function(x, pos, maxbp, winsize = 100L) {
-    .Call('vcfR_NM2winNM', PACKAGE = 'vcfR', x, pos, maxbp, winsize)
+#' @export
+.NM2winNM <- function(x, pos, maxbp, winsize = 100L, depr = 1L) {
+    .Call(`_vcfR_NM2winNM`, x, pos, maxbp, winsize, depr)
 }
 
-windowize_NM <- function(x, pos, starts, ends, summary = "mean") {
-    .Call('vcfR_windowize_NM', PACKAGE = 'vcfR', x, pos, starts, ends, summary)
+#' @export
+.windowize_NM <- function(x, pos, starts, ends, summary = "mean", depr = 1L) {
+    .Call(`_vcfR_windowize_NM`, x, pos, starts, ends, summary, depr)
 }
 
 pair_sort <- function() {
-    .Call('vcfR_pair_sort', PACKAGE = 'vcfR')
+    .Call(`_vcfR_pair_sort`)
 }
 
-rank_variants <- function(variants, ends, score) {
-    .Call('vcfR_rank_variants', PACKAGE = 'vcfR', variants, ends, score)
+#' @export
+.rank_variants <- function(variants, ends, score) {
+    .Call(`_vcfR_rank_variants`, variants, ends, score)
 }
 
-seq_to_rects <- function(seq, targets) {
-    .Call('vcfR_seq_to_rects', PACKAGE = 'vcfR', seq, targets)
+#' @export
+.vcf_stats_gz <- function(x, nrows = -1L, skip = 0L, verbose = 1L) {
+    .Call(`_vcfR_vcf_stats_gz`, x, nrows, skip, verbose)
 }
 
-window_init <- function(window_size, max_bp) {
-    .Call('vcfR_window_init', PACKAGE = 'vcfR', window_size, max_bp)
+#' @export
+.read_meta_gz <- function(x, stats, verbose) {
+    .Call(`_vcfR_read_meta_gz`, x, stats, verbose)
 }
 
-windowize_fasta <- function(wins, seq) {
-    .Call('vcfR_windowize_fasta', PACKAGE = 'vcfR', wins, seq)
+#' @export
+.read_body_gz <- function(x, stats, nrows = -1L, skip = 0L, cols = 0L, convertNA = 1L, verbose = 1L) {
+    .Call(`_vcfR_read_body_gz`, x, stats, nrows, skip, cols, convertNA, verbose)
 }
 
-windowize_variants <- function(windows, variants) {
-    .Call('vcfR_windowize_variants', PACKAGE = 'vcfR', windows, variants)
+#' @export
+.seq_to_rects <- function(seq, targets) {
+    .Call(`_vcfR_seq_to_rects`, seq, targets)
 }
 
-windowize_annotations <- function(wins, ann_starts, ann_ends, chrom_length) {
-    .Call('vcfR_windowize_annotations', PACKAGE = 'vcfR', wins, ann_starts, ann_ends, chrom_length)
+#' @export
+.window_init <- function(window_size, max_bp) {
+    .Call(`_vcfR_window_init`, window_size, max_bp)
 }
 
-vcf_stats_gz <- function(x) {
-    .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', x)
+#' @export
+.windowize_fasta <- function(wins, seq) {
+    .Call(`_vcfR_windowize_fasta`, wins, seq)
 }
 
-read_meta_gz <- function(x, stats, verbose) {
-    .Call('vcfR_read_meta_gz', PACKAGE = 'vcfR', x, stats, verbose)
+#' @export
+.windowize_variants <- function(windows, variants) {
+    .Call(`_vcfR_windowize_variants`, windows, variants)
 }
 
-read_body_gz <- function(x, stats, nrows = -1L, skip = 0L, cols = 0L, convertNA = 1L, verbose = 1L) {
-    .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', x, stats, nrows, skip, cols, convertNA, verbose)
+#' @export
+.windowize_annotations <- function(wins, ann_starts, ann_ends, chrom_length) {
+    .Call(`_vcfR_windowize_annotations`, wins, ann_starts, ann_ends, chrom_length)
 }
 
-write_vcf_body <- function(fix, gt, filename, mask = 0L) {
-    invisible(.Call('vcfR_write_vcf_body', PACKAGE = 'vcfR', fix, gt, filename, mask))
-}
-
-write_fasta <- function(seq, seqname, filename, rowlength = 80L, verbose = 1L) {
-    invisible(.Call('vcfR_write_fasta', PACKAGE = 'vcfR', seq, seqname, filename, rowlength, verbose))
+#' @export
+.write_vcf_body <- function(fix, gt, filename = "myFile.vcf.gz", mask = 0L) {
+    invisible(.Call(`_vcfR_write_vcf_body`, fix, gt, filename, mask))
 }
 

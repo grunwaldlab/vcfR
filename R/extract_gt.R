@@ -1,4 +1,3 @@
-
 #' @title Extract elements from vcfR objects
 #' 
 #'  
@@ -39,7 +38,7 @@
 #' 
 #' 
 #' @seealso
-#' \code{\link{is.polymorphic}}
+#' \code{is.polymorphic}
 #' 
 #' 
 #' @examples 
@@ -98,20 +97,18 @@ extract.gt <- function(x, element="GT",
     if(colnames(x@gt)[1] != "FORMAT"){
       stop("First column is not named 'FORMAT', this is essential information.")
     }
-#    .Call('vcfR_extract_haps', PACKAGE = 'vcfR', ref, alt, gt, gt_split, verbose)
-#    outM <- .Call('vcfR_extract_GT_to_CM', PACKAGE = 'vcfR', x@gt, element)
-    outM <- .Call('vcfR_extract_GT_to_CM2', PACKAGE = 'vcfR',
-                  x@fix,
-                  x@gt,
-                  element,
-                  return.alleles, 
-                  as.integer(extract), 
-                  convertNA = as.numeric(convertNA) )
+
+    outM <- .extract_GT_to_CM(x@fix,
+                              x@gt,
+                              element,
+                              return.alleles, 
+                              as.integer(extract), 
+                              convertNA = as.numeric(convertNA) )
   }
 
   # If as.numeric is true, convert to a numeric matrix.
   if(as.numeric == TRUE){
-    outM <- .Call('vcfR_CM_to_NM', PACKAGE = 'vcfR', outM)
+    outM <- .CM_to_NM(outM)
   }
   
   # 
@@ -187,12 +184,8 @@ extract.haps <- function(x,
     haps <- extract.gt( x )
   } else if ( ploidy > 1 ) {
     gt <- extract.gt( x )
-#    haps <- .Call('vcfR_extract_haps', PACKAGE = 'vcfR', 
-#                  x@fix[,'REF'], x@fix[,'ALT'], 
-#                  gt, gt.split, as.numeric(verbose))
-    haps <- .Call('vcfR_extract_haps', PACKAGE = 'vcfR', 
-                  x@fix[,'REF'], x@fix[,'ALT'],
-                  gt, as.numeric(unphased_as_NA), as.numeric(verbose))
+    haps <- .extract_haps(x@fix[,'REF'], x@fix[,'ALT'],
+                          gt, as.numeric(unphased_as_NA), as.numeric(verbose))
   } else {
     stop('Oops, we should never arrive here!')
   }
@@ -226,6 +219,11 @@ extract.haps <- function(x,
 #' getFIX(vcf)
 #' 
 #' data(vcfR_test)
+#' vcfR_test@fix[1,'ALT'] <- "<NON_REF>"
+#' vcf <- extract.indels(vcfR_test)
+#' getFIX(vcf)
+#' 
+#' data(vcfR_test)
 #' extract.haps(vcfR_test, unphased_as_NA = FALSE)
 #' extract.haps(vcfR_test)
 #' 
@@ -238,19 +236,34 @@ extract.indels <- function(x, return.indels=FALSE){
   if(class(x) != "vcfR"){
     stop("Unexpected class! Expecting an object of class vcfR or chromR.")
   }
+  
+  # Create an evaluation matrix
+  isIndel <- matrix(FALSE, nrow=nrow(x), ncol = 2)
+  colnames(isIndel) <- c('REF','ALT')
 
   # Check reference for indels
-  mask <- nchar(x@fix[,'REF']) > 1
+  isIndel[,'REF'] <- nchar(x@fix[,'REF']) > 1
   # Check reference for missing data.
 #  mask[ grep(".", x@fix[,'REF'], fixed = TRUE) ] <- TRUE
   
   # Check alternate for indels
-  mask[ unlist( lapply(
-          strsplit(x@fix[,'ALT'], split=","), 
-          function(x){ max(nchar(x)) > 1 }
-  ) ) ] <- TRUE
-  # Check alternate for missing data
+  checkALT <- function(x){
+    x <- stats::na.omit(x)
+    x <- x[ x != "<NON_REF>" ]
+    if( length(x) > 0 ){
+      max(nchar(x)) > 1 
+    } else {
+      FALSE
+    }
+  }
+  isIndel[,'ALT'] <- unlist( lapply( strsplit(x@fix[,'ALT'], split=","), checkALT) )
 
+  mask <- rowSums(isIndel)
+  mask <- mask > 0
+  
+  # GATK's g.vcf includes "<NON_REF>"
+#  isIndel <- x@fix[,'ALT'] == "<NON_REF>"
+  
 
   if(return.indels == FALSE){
     x <- x[ !mask, , drop = FALSE ]

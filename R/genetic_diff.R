@@ -167,6 +167,7 @@ calc_nei <- function(x1, x2){
 #' This is calculated as in equation 13 from Jost (2008).
 #' Examples are available at Jost's website: \url{http://www.loujost.com}.
 #' 
+#' A nice review of Fst and some of its analogues can be found in Holsinger and Weir (2009).
 #' 
 #' @seealso poppr.amova in \href{https://cran.r-project.org/package=poppr}{poppr}, amova in \href{https://cran.r-project.org/package=ade4}{ade4}, amova in \href{https://cran.r-project.org/package=pegas}{pegas}, \href{https://cran.r-project.org/package=hierfstat}{hierfstat}, \href{https://cran.r-project.org/package=DEMEtics}{DEMEtics}, and, \href{https://cran.r-project.org/package=mmod}{mmod}.
 #' 
@@ -174,15 +175,18 @@ calc_nei <- function(x1, x2){
 #' @references 
 #' Hedrick, Philip W. "A standardized genetic differentiation measure." Evolution 59.8 (2005): 1633-1638.
 #' 
+#' Holsinger, Kent E., and Bruce S. Weir. "Genetics in geographically structured populations: defining, estimating and interpreting FST." Nature Reviews Genetics 10.9 (2009): 639-650.
+#' 
 #' Jost, Lou. "GST and its relatives do not measure differentiation." Molecular ecology 17.18 (2008): 4015-4026.
 #' 
+#' Whitlock, Michael C. "G'ST and D do not replace FST." Molecular Ecology 20.6 (2011): 1083-1091.
 #' 
 #' 
 #' @examples
 #' data(vcfR_example)
 #' myPops <- as.factor(rep(c('a','b'), each = 9))
 #' myDiff <- genetic_diff(vcf, myPops, method = "nei")
-#' colMeans(myDiff[,c(3:6,9)], na.rm = TRUE)
+#' colMeans(myDiff[,c(3:8,11)], na.rm = TRUE)
 #' 
 #'
 genetic_diff <- function(vcf, pops, method = "nei"){
@@ -211,23 +215,15 @@ genetic_diff <- function(vcf, pops, method = "nei"){
   }
   
   # Get allele counts for total and subs.
-#  popTot <- .Call("vcfR_gt_to_popsum", PACKAGE = "vcfR", var_info = var_info, gt = gt)
-  
+
   for(i in 1:nPop){
-    subpop.l[[i]] <- .Call("vcfR_gt_to_popsum", 
-                           PACKAGE = "vcfR", 
-                           var_info = var_info, 
+    subpop.l[[i]] <- .gt_to_popsum(var_info = var_info, 
                            gt = gt[,pops == levels(pops)[i], drop = FALSE]
                            )
   }
   
-  
   if( method == "nei" ){
-    tot <- .Call("vcfR_gt_to_popsum", 
-                 PACKAGE = "vcfR", 
-                 var_info = var_info, 
-                 gt = gt
-    )
+    tot <- .gt_to_popsum(var_info = var_info, gt = gt)
     
     gdiff <- calc_nei(tot, subpop.l)
   } else if( method == "jost" ){

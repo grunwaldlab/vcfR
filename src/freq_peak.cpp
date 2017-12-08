@@ -350,6 +350,7 @@ Rcpp::NumericVector count_nonNA( Rcpp::NumericMatrix myMat ){
 }
 
 // Sort data into bins based on breaks (boundaries).
+//
 Rcpp::NumericMatrix bin_data( Rcpp::NumericVector myFreqs,
                               float bin_width
 ){
@@ -391,19 +392,22 @@ Rcpp::NumericMatrix bin_data( Rcpp::NumericVector myFreqs,
 //  Rcpp::Rcout << "\nBinning!\n\n";
   
   for(i=0; i<myFreqs.size(); i++){
-    int intQuery = myFreqs(i) * multiplier;
-    j = 0;
-    if( ( intQuery >= intBreaks(j,0) ) & ( intQuery <= intBreaks(j,2) ) ){
-//      Rcpp::Rcout << "Binned: " <<  myFreqs(i) << " is >= " << breaks(j,0) << " & <= " << breaks(j,2) << "\n";
-//      breaks(j,3) = breaks(j,3) + 1;
-    }
-    for(j=1; j<breaks.nrow(); j++){
-      if( ( intQuery > intBreaks(j,0) ) & ( intQuery <= intBreaks(j,2) ) ){
-//        Rcpp::Rcout << "Binned: " <<  myFreqs(i) << " is > " << breaks(j,0) << " & <= " << breaks(j,2) << "\n";
-        breaks(j,3) = breaks(j,3) + 1;
+    // myFreqs is a Rcpp::NumericVector and can potentially include missing values.
+    // Here we are trying to bin the values, so we should be safe ignoring missing values.
+    if( !Rcpp::NumericVector::is_na(myFreqs(i)) ){
+      int intQuery = myFreqs(i) * multiplier;
+      j = 0;
+      if( ( intQuery >= intBreaks(j,0) ) & ( intQuery <= intBreaks(j,2) ) ){
+//        Rcpp::Rcout << "Binned: " <<  myFreqs(i) << " is >= " << breaks(j,0) << " & <= " << breaks(j,2) << "\n";
+//        breaks(j,3) = breaks(j,3) + 1;
+      }
+      for(j=1; j<breaks.nrow(); j++){
+        if( ( intQuery > intBreaks(j,0) ) & ( intQuery <= intBreaks(j,2) ) ){
+//          Rcpp::Rcout << "Binned: " <<  myFreqs(i) << " is > " << breaks(j,0) << " & <= " << breaks(j,2) << "\n";
+          breaks(j,3) = breaks(j,3) + 1;
+        }
       }
     }
-    
   }
   
   return(breaks);  
@@ -439,9 +443,6 @@ double find_one_peak( Rcpp::NumericMatrix binned_data,
   }
   return( myPeak );  
 }
-
-
-
 
 
 
@@ -546,19 +547,21 @@ Rcpp::NumericVector find_peaks( Rcpp::NumericMatrix myMat,
 //' Because this method is based on binning the data it does not rely on a distributional assumption.
 //' 
 //' 
-//' The parameter `lhs` specifyies whether the search for the bin of greatest density should be performed from the left hand side.
+//' The parameter \code{lhs} specifyies whether the search for the bin of greatest density should be performed from the left hand side.
 //' The default value of TRUE starts at the left hand side, or zero, and selects a new bin as having the greatest density only if a new bin has a greater density.
 //' If the new bin has an equal density then no update is made.
 //' This causees the analysis to select lower frequencies.
 //' When this parameter is set to FALSE ties result in an update of the bin of greatest density.
 //' This causes the analysis to select higher frequencies.
-//' It is recommended that when testing the most abundant allele (typically [0.5-1]) to use the default of TURE so that a low value is preferred.
+//' It is recommended that when testing the most abundant allele (typically [0.5-1]) to use the default of TRUE so that a low value is preferred.
 //' Similarly, when testing the less abundant alleles it is recommended to set this value at FALSE to preferentially select high values.
 //' 
 //' 
 //' @return 
-//' A list containing:
+//' A freq_peak object (a list) containing:
 //' \itemize{
+//'   \item The window size
+//'   \item The binwidth used for peak binning
 //'   \item a matrix containing window coordinates
 //'   \item a matrix containing peak locations
 //'   \item a matrix containing the counts of variants for each sample in each window
@@ -570,6 +573,9 @@ Rcpp::NumericVector find_peaks( Rcpp::NumericMatrix myMat,
 //' Alternatively, if `count = TRUE` the number of non-missing values in each window is reported.
 //' The number of non-mising values in each window may be used to censor windows containing low quantities of data.
 //' 
+//' @seealso
+//' peak_to_ploid,
+//' freq_peak_plot
 //' 
 //' @examples
 //' data(vcfR_example)
@@ -665,17 +671,6 @@ Rcpp::List freq_peak(Rcpp::NumericMatrix myMat,
   pos_to_windows(pos, wins);
 //  Rcpp::Rcout << " Finding windows.\n";
 
-  
-    
-//  int win_num = 0;
-//  i = 0;
-
-  
-//  if( pos.size() > 0 ){
-    // First row.
-//  
-
-  
     //                //
     // Sanity checks. //
     //                //
@@ -687,6 +682,8 @@ Rcpp::List freq_peak(Rcpp::NumericMatrix myMat,
         Rcpp::Named("wins") = wins,
         Rcpp::Named("peaks") = naMat
       );
+//      myList.attr("class") = Rcpp::CharacterVector::create("list", "freq_peak");
+      myList.attr("class") = Rcpp::CharacterVector::create("freq_peak", "list");
       return( myList );
     }
     
@@ -697,37 +694,41 @@ Rcpp::List freq_peak(Rcpp::NumericMatrix myMat,
         Rcpp::Named("wins") = wins,
         Rcpp::Named("peaks") = naMat
       );
+//      myList.attr("class") = Rcpp::CharacterVector::create("list", "freq_peak");
+      myList.attr("class") = Rcpp::CharacterVector::create("freq_peak", "list");
       return( myList );
     }
-    
+
+    // bin_width greater than 0.001    
     if( bin_width < 0.001 ){
       Rcpp::Rcerr << "Please use a bin_width >= 0.001.\n";
       Rcpp::List myList = Rcpp::List::create(
         Rcpp::Named("wins") = wins,
         Rcpp::Named("peaks") = naMat
       );
+//      myList.attr("class") = Rcpp::CharacterVector::create("list", "freq_peak");
+      myList.attr("class") = Rcpp::CharacterVector::create("freq_peak", "list");
       return( myList );
     }
     
     // No remainder to bin width.
-    //int nbins = 1 / bin_width;
-//    float nbins = 1.0 / bin_width;
-//    if( 1.0/bin_width - nbins > 0.0 ){
-//    if( 1.0 % bin_width != 0 ){
-//    float myTest = fmod(1, bin_width);
+
     int myTest = (bin_width * 1000) + 0.5;
     if( 1000 % myTest != 0 ){
       Rcpp::Rcerr << "bin_width: " << bin_width << "\n";
       Rcpp::Rcerr << "myTest: " << myTest << "\n";
-//      Rcpp::Rcerr << "nbins: " << nbins << "\n";
       Rcpp::Rcerr << "1/bin_width has a remainder, please try another bin_width.\n";
+      
       Rcpp::List myList = Rcpp::List::create(
         Rcpp::Named("wins") = wins,
         Rcpp::Named("peaks") = naMat
       );
+    
+//    myList.attr("class") = Rcpp::CharacterVector::create("list", "freq_peak");
+    myList.attr("class") = Rcpp::CharacterVector::create("freq_peak", "list");
     return( myList );
     }
-//    }
+
 
     //                    //
     // Process by window. //
@@ -760,11 +761,14 @@ Rcpp::List freq_peak(Rcpp::NumericMatrix myMat,
   
   // Create the return List.
   Rcpp::List myList = Rcpp::List::create(
+    Rcpp::Named("winsize") = winsize,
+    Rcpp::Named("bin_width") = bin_width,
     Rcpp::Named("wins") = wins,
     Rcpp::Named("peaks") = freqs,
     Rcpp::Named("counts") = cnts
   );
 
+  myList.attr("class") = Rcpp::CharacterVector::create("freq_peak", "list");
   return(myList);
 }
 

@@ -18,6 +18,7 @@
 #' @param mask logical vector indicating rows to use.
 #' @param APPEND logical indicating whether to append to existing vcf file or write a new file.
 #' @param convertNA logical specifying to convert VCF missing data to NA.
+#' @param checkFile test if teh first line follows the VCF specification.
 #' 
 #' @param verbose report verbose progress.
 #'
@@ -93,7 +94,14 @@
 #' @aliases read.vcfR
 #' @export
 #' 
-read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, convertNA = TRUE, verbose = TRUE){
+read.vcfR <- function(file, 
+                      limit=1e7, 
+                      nrows = -1, 
+                      skip = 0, 
+                      cols = NULL, 
+                      convertNA = TRUE,
+                      checkFile = TRUE,
+                      verbose = TRUE){
 #  require(memuse)
   
   # gzopen does not appear to deal well with tilde expansion.
@@ -106,8 +114,51 @@ read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, conver
     stop(paste("File:", file, "appears to exist but is not readable!"))
   }
   
+  # Test that this is a VCF file.
+  if(checkFile == TRUE){
+    vcf <- scan(file=file, what = character(), nmax=1, sep="\n", quiet = TRUE, comment.char = "")
+    if(substr(vcf,start=1, stop=17) != "##fileformat=VCFv"){
+      msg <- paste("File:", file, "does not appear to be a VCF file.\n")
+      msg <- paste(msg, " First line of file:\n", file)
+      msg <- paste(msg, "\n")
+      msg <- paste(msg, " Should begin with:\n##fileformat=VCFv")
+      msg <- paste(msg, "\n")
+      stop(msg)
+    }
+  }  
+  
   vcf <- new(Class="vcfR")
-  stats <- .Call('vcfR_vcf_stats_gz', PACKAGE = 'vcfR', file)
+
+  stats <- .vcf_stats_gz(file, nrows=nrows, skip = skip, verbose = as.integer(verbose) )
+  # stats should be a named vector containing "meta", "header", "variants", "columns".
+  # They should have been initialize to zero.
+  if(verbose == TRUE){
+    cat("File attributes:")
+    cat("\n")
+    cat( paste("  meta lines:", stats['meta']) )
+    cat("\n")
+    cat( paste("  header line:", stats['header']) )
+    cat("\n")
+    cat( paste("  variant count:", stats['variants']) )
+    cat("\n")
+    cat( paste("  column count:", stats['columns']) )
+    cat("\n")
+  }
+  utils::flush.console()
+  
+  if( stats['meta'] < 0 ){
+    stop( paste("stats['meta'] less than zero:", stats['meta'], ", this should never happen.") )
+  }
+  if( stats['header'] < 0 ){
+    stop( paste("stats['header'] less than zero:", stats['header'], ", this should never happen.") )
+  }
+  if( stats['variants'] < 0 ){
+    stop( paste("stats['variants'] less than zero:", stats['variants'], ", this should never happen.") )
+  }
+  if( stats['columns'] < 0 ){
+    stop( paste("stats['columns'] less than zero:", stats['columns'], ", this should never happen.") )
+  }
+  
   
   if( is.null(cols) ){
     cols <- 1:stats['columns']
@@ -126,8 +177,11 @@ read.vcfR <- function(file, limit=1e7, nrows = -1, skip = 0, cols = NULL, conver
     stop("Object size limit exceeded")
   }
   
-  vcf@meta <- .Call('vcfR_read_meta_gz', PACKAGE = 'vcfR', file, stats, as.numeric(verbose))
-  body <- .Call('vcfR_read_body_gz', PACKAGE = 'vcfR', file = file, stats = stats, 
+  # Read meta
+  vcf@meta <- .read_meta_gz(file, stats, as.numeric(verbose))
+
+  # Read body
+  body <- .read_body_gz(file, stats = stats, 
                 nrows = nrows, skip = skip, cols = cols, 
                 convertNA = as.numeric(convertNA), verbose = as.numeric(verbose))
 
@@ -160,6 +214,9 @@ write.vcf <- function(x, file = "", mask = FALSE, APPEND = FALSE){
     stop("Unexpected class! Expecting an object of class vcfR or chromR.")
   }
   
+  # gzopen does not appear to deal well with tilde expansion.
+  file <- path.expand(file)
+  
   if(APPEND == FALSE){
     gz <- gzfile(file, "w")
     
@@ -175,9 +232,9 @@ write.vcf <- function(x, file = "", mask = FALSE, APPEND = FALSE){
   }
   
   if(mask == FALSE){
-    test <- .Call('vcfR_write_vcf_body', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 0)
+    test <- .write_vcf_body(fix = x@fix, gt = x@gt, filename = file, mask = 0)
   } else if (mask == TRUE){
-    test <- .Call('vcfR_write_vcf_body', PACKAGE = 'vcfR', fix = x@fix, gt = x@gt, filename = file, mask = 1)
+    test <- .write_vcf_body(fix = x@fix, gt = x@gt, filename = file, mask = 1)
   }
 }
 

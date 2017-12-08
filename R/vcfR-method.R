@@ -116,8 +116,13 @@ setMethod(
     print("", quote=FALSE)
     
     print("Unique GT formats:")
-    print(unique(as.character(x@gt[,1])))
-    print("", quote=FALSE)
+    if( nrow(x@gt) == 0 ){
+      print("No gt slot present")
+      print("", quote=FALSE)      
+    } else {
+      print(unique(as.character(x@gt[,1])))
+      print("", quote=FALSE)      
+    }
   }
 )
 
@@ -147,6 +152,8 @@ setMethod(
 #' 
 # @export
 # @aliases []
+#'
+#' @aliases [,vcfR-method
 #'
 #' @param i vector of rows (variants) to include
 #' @param j vector of columns (samples) to include

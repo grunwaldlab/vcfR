@@ -8,6 +8,21 @@ At the present, this is simply a to-do list for ideas to include in the next maj
 This may have been addressed at 64a308ba50b9119108e8946737460de5997b805b by adding `samples` to vcfR method `[`.
 
 
+# vcfR 1.6.0
+Released on CRAN 201X-XX-XX.
+* `vcfR2DNAbin()` can include indels and maintains alignment.
+* `write.vcf()` now handles tilde expansion.
+* `rePOS()` attempts top create a non-overlapping coordinate system from POS and CHROM.
+* `vcfR2DNAbin()` manages the asterisk allele.
+* `extract.indels()` ignores GATK's <NON_REF>.
+* Added support for chromR objects with no gt slot to `proc.chromR()`.
+* Created `peak_to_ploid()` to call peaks and calculate dfe from `freq_peak()` output.
+* Created `freq_peak_plot()` to help visualize the output of `freq_peak()`.
+* `.vcf_stats_gz` now has nrows and skip parameters.
+* removed `.Call()` statements to standardize style.
+* Created `vcfR2migrate()` to output MigrateN format data.
+* Addressed clang-UBSAN memory leak in `freq_peak()`.
+* Created `pairwise_genetic_diff()` to calculate pairwise differentiation.
 
 # vcfR 1.5.0
 Released on CRAN 2017-05-18.

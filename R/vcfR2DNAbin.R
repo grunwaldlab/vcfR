@@ -10,11 +10,12 @@
 #' Convert objects of class vcfR to objects of class ape::DNAbin
 #' 
 #' @param x an object of class chromR or vcfR
-#' @param extract.indels logical, at present, the only option is TRUE
-#' @param consensus logical, at present, the only option is FALSE
+#' @param extract.indels logical indicating to remove indels (TRUE) or to include them while retaining alignment
+#' @param consensus logical, indicates whether an IUPAC ambiguity code should be used for diploid heterozygotes 
 #' @param extract.haps logical specifying whether to separate each genotype into alleles based on a delimiting character
 # @param gt.split character to delimit alleles within genotypes
 #' @param unphased_as_NA logical indicating how to handle alleles in unphased genotypes
+#' @param asterisk_as_del logical indicating that the asterisk allele should be converted to a deletion (TRUE) or NA (FALSE)
 #' @param ref.seq reference sequence (DNAbin) for the region being converted
 #' @param start.pos chromosomal position for the start of the ref.seq
 #' @param verbose logical specifying whether to produce verbose output
@@ -53,7 +54,7 @@
 #' 
 #' 
 #' Conversion of \strong{diploid data} presents a number of scenarios.
-#' When the option \code{consensus} is TRUE, each genotype is split into two alleles and the two alleles are converted into their IUPAC ambiguity code.
+#' When the option \code{consensus} is TRUE and \code{extract.haps} is FALSE, each genotype is split into two alleles and the two alleles are converted into their IUPAC ambiguity code.
 #' This results in one sequence for each diploid sample.
 #' This may be an appropriate path when you have unphased data.
 #' Note that functions called downstream of this choice may handle IUPAC ambiguity codes in unexpected manners.
@@ -63,6 +64,13 @@
 #' Note that this really only makes sense if you have phased data.
 #' The options ref.seq and start.pos are used as in halpoid data.
 #' 
+#' 
+#' When a variant overlaps a deletion it may be encoded by an \strong{asterisk allele (*)}.
+#' The GATK site covers this in a post on \href{https://gatkforums.broadinstitute.org/gatk/discussion/6926/spanning-or-overlapping-deletions-allele}{Spanning or overlapping deletions} ].
+#' This is handled in vcfR by allowing the user to decide how it is handled with the paramenter \code{asterisk_as_del}.
+#' When \code{asterisk_as_del} is TRUE this allele is converted into a deletion ('-').
+#' When \code{asterisk_as_del} is FALSE the asterisk allele is converted to NA.
+#' If \code{extract.indels} is set to FALSE it should override this decision.
 #' 
 #' 
 #' Conversion of \strong{polyploid data} is currently not supported.
@@ -123,6 +131,7 @@ vcfR2DNAbin <- function( x,
                          consensus = FALSE,
                          extract.haps = TRUE,
                          unphased_as_NA = TRUE,
+                         asterisk_as_del = FALSE,
                          ref.seq = NULL,
                          start.pos = NULL,
                          verbose = TRUE )
@@ -136,14 +145,29 @@ vcfR2DNAbin <- function( x,
   if( !is.null(start.pos) & class(start.pos) == "character" ){
     start.pos <- as.integer(start.pos)
   }
+  if( extract.indels == FALSE & consensus == TRUE ){
+    msg <- "invalid selection: extract.indels set to FALSE and consensus set to TRUE."
+    msg <- c(msg, "There is no IUPAC ambiguity code for indels")
+    stop(msg)
+  }
+  
   
   # Check and sanitize ref.seq.
   if( class(ref.seq) != 'DNAbin' & !is.null(ref.seq) ){
     stop( paste("expecting ref.seq to be of class DNAbin but it is of class", class(ref.seq)) )
   }
   if( is.list(ref.seq) ){
-    ref.seq <- as.matrix(ref.seq)
+    #ref.seq <- as.matrix(ref.seq)
+    ref.seq <- ref.seq[[1]]
   }
+  if( is.matrix(ref.seq) ){
+    ref.seq <- ref.seq[1,]
+    ref.seq <- ref.seq[1:ncol(ref.seq)]
+  }
+
+# If vector  
+#  dna <- as.matrix(t(dna))
+  
   
   # Check start.pos
   if( is.null(start.pos) & !is.null(ref.seq) ){
@@ -161,7 +185,26 @@ vcfR2DNAbin <- function( x,
       message(paste("After extracting indels,", nrow(x), "variants remain."))
     }
   } else {
-    stop("extract.indels == FALSE is not currently implemented.")
+#    stop("extract.indels == FALSE is not currently implemented.")
+    
+    # Make alleles at each locus the same length
+    # https://stackoverflow.com/a/36136878
+    equal_allele_len <- function(x){
+      alleles <- c(myRef[x], unlist(strsplit(myAlt[x], split = ",")))
+      alleles[is.na(alleles)] <- 'n'
+      alleles <- format(alleles, width=max(nchar(alleles)))
+      alleles <- gsub("\\s", "-", alleles)
+      myRef[x] <<- alleles[1]
+      myAlt[x] <<- paste(alleles[2:length(alleles)], collapse=",")
+      invisible()
+    }
+    
+    myRef <- getREF(x)
+    myAlt <- getALT(x)
+    invisible(lapply(1:length(myRef), equal_allele_len))
+    
+    x@fix[,'REF'] <- myRef
+    x@fix[,'ALT'] <- myAlt
   }
   
   # Save POS in case we need it.
@@ -196,7 +239,12 @@ vcfR2DNAbin <- function( x,
     }
   }
 
-
+  if( asterisk_as_del == TRUE){
+    x[ x == "*" & !is.na(x) ] <- '-'
+  } else {
+    x[ x == "*" & !is.na(x) ] <- 'n'
+  }
+  
   # Data could be haploid, diploid or higher ploid.
 
   # x should be a matrix of variants by here.
@@ -223,8 +271,10 @@ vcfR2DNAbin <- function( x,
     # First we remove variants above the region.
     # Then we remove variants below this region.
     # Then we rescale the region to be one-based.
-    variants <- variants[ pos < start.pos + dim(ref.seq)[2], , drop = FALSE]
-    pos <- pos[ pos < start.pos + dim(ref.seq)[2] ]
+#    variants <- variants[ pos < start.pos + dim(ref.seq)[2], , drop = FALSE]
+#    pos <- pos[ pos < start.pos + dim(ref.seq)[2] ]
+    variants <- variants[ pos < start.pos + length(ref.seq), , drop = FALSE]
+    pos <- pos[ pos < start.pos + length(ref.seq) ]
     variants <- variants[ pos >= start.pos, , drop = FALSE]
     pos <- pos[ pos >= start.pos ]
     pos <- pos - start.pos + 1
@@ -242,6 +292,10 @@ vcfR2DNAbin <- function( x,
   }
   
   # Convert matrix to DNAbin
+  if( extract.indels == FALSE ){
+    # Indel strings need to be split into characters
+    x <- apply(x, MARGIN=2, function(x){ unlist(strsplit(x,"")) })
+  }
   x <- ape::as.DNAbin(t(x))
   
   return(x)
