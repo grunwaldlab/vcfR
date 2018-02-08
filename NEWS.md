@@ -8,11 +8,19 @@ At the present, this is simply a to-do list for ideas to include in the next maj
 This may have been addressed at 64a308ba50b9119108e8946737460de5997b805b by adding `samples` to vcfR method `[`.
 
 
+# vcfR 1.7.0
+Released on CRAN 2018-02-07.
+* `vcf_field_names()` now delimts on KEY= of key/value pairs, allows commas to be used within value.
+* `read.vcfR()` will download files when provided with a link.
+* Added example data from the Variant Effect Predictor (vep) `data(vep)`.
+
+
 # vcfR 1.6.0
-Released on CRAN 201X-XX-XX.
+Released on CRAN 2017-12-08.
+* `vcf_field_names()` now handles keys that are out of order and multiple optional keys.
 * `vcfR2DNAbin()` can include indels and maintains alignment.
 * `write.vcf()` now handles tilde expansion.
-* `rePOS()` attempts top create a non-overlapping coordinate system from POS and CHROM.
+* `rePOS()` attempts to create a non-overlapping coordinate system from POS and CHROM.
 * `vcfR2DNAbin()` manages the asterisk allele.
 * `extract.indels()` ignores GATK's <NON_REF>.
 * Added support for chromR objects with no gt slot to `proc.chromR()`.
