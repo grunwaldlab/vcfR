@@ -6,6 +6,17 @@ At the present, this is simply a to-do list for ideas to include in the next maj
 
 * Move 'FORMAT' column to its own slot. We can then cbind FORMAT and gt when passing to compiled code.
 This may have been addressed at 64a308ba50b9119108e8946737460de5997b805b by adding `samples` to vcfR method `[`.
+* In issue #92 (vcfR2genlight big data #92), JimWhiting91 has documented that `extract.gt()` could be greatly improved with multithreading. While he used `mclapply()` I do not feel this is the best solution because it does not work on Windows. I think a better solution would be [RCppParallel](https://rcppcore.github.io/RcppParallel/) because this should work on all CRAN platforms.
+
+
+# vcfR 1.8.0
+Released on CRAN 2018-04-17
+* Attempted to address CRAN's 'Note: break used in wrong context: no loop is visible' issue.
+* `.vcf_stats_gz()` reports number of elements in header as well as the file's last line. This is used by `read.vcfR()` to check for poorly formed files.
+* `show` method for vcfR now queries @fix instead of @gt.
+* `check_keys()` checks key definitions in the meta section to make sure they are unique.
+* `freq_peak_plot()` has parameter `posUnits` to adjust units of scatterplot.
+* `vcfR2migrate()` manual discusses Unix and Windows line endings.
 
 
 # vcfR 1.7.0
@@ -30,7 +41,7 @@ Released on CRAN 2017-12-08.
 * removed `.Call()` statements to standardize style.
 * Created `vcfR2migrate()` to output MigrateN format data.
 * Addressed clang-UBSAN memory leak in `freq_peak()`.
-* Created `pairwise_genetic_diff()` to calculate pairwise differentiation.
+* Created `pairwise_genetic_diff()` to calculate pairwise differentiation. Thanks Javier!
 
 # vcfR 1.5.0
 Released on CRAN 2017-05-18.

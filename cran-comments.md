@@ -1,26 +1,50 @@
 
+## Resubmission
+This is a resubmission.
+CRAN reported the following after submission.
+
+Found the following (possibly) invalid URLs:
+  URL: https://software.broadinstitute.org/gatk/
+    From: inst/doc/converting_data.html
+    Status: 500
+    Message: Internal Server Error
+
+Also fails manually for me. A temporary issue?
+
+This link does work from my computer.
+I have also asked several lab mates to check it and they have all validated that it works.
+I have also rerun tests on winbuilder R version 3.4.4.
+https://win-builder.r-project.org/N5kC8mk7aG29/
+and winbuilder R version 3.5.0 RC (2018-04-16 r74611)
+https://win-builder.r-project.org/Jh34i9ic2m07/
+and have failed to reproduce the behaviour.
+I think this indicates that the reported behaviour was temporary.
+
+Incidentally, this is an updated link in this release (1.8.0) versus the previous (1.7.0).
+The reason for this update is that R CMD check --as-cran told me I had an old link and it even gave me the updated link that is in this current version.
+So I think its doing its job.
 
 ## Test environments
-* local: ubuntu 16.04 LTS, R 3.4.3
-* local: OS X install, R 3.4.3
-* ubuntu 14.04.5 LTS (on travis-ci), R 3.4.2
-* Windows Server 2012 R2 x64 (build 9600; on AppVeyor), R version 3.4.3 Patched (2018-02-03 r74215)
-* winbuilder: R version 3.4.3 (2017-11-30)
-* winbuilder: R Under development (unstable) (2018-02-01 r74194)
+* local: ubuntu 16.04 LTS, R 3.4.4
+* local: OS X install, R 3.4.4
+* ubuntu 14.04.5 LTS (on travis-ci), R 3.4.4
+* rocker/r-devel: R Under development (unstable) (2018-03-16 r74418) with valgrind
+* winbuilder: R version 3.4.4 (2018-03-15)
+* winbuilder: R version 3.5.0 RC (2018-04-15 r74605)
 
+* Windows Server 2012 R2 x64 (build 9600; on AppVeyor), R version 3.5.0 RC (2018-04-15 r74605)
+Error : package 'Rcpp' was installed by an R version with different internals; it needs to be reinstalled for use with this R version
+I do not believe that this ERROR is due to vcfR.
 
 ## R CMD check results
-There were no ERRORs or WARNINGs. 
+There were no ERRORs or WARNINGs.
 
 There was 1 NOTE:
 
-* checking CRAN incoming feasibility ... Note_to_CRAN_maintainers
-Maintainer: ‘Brian J. Knaus <briank.lists@gmail.com>’
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: 'Brian J. Knaus <briank.lists@gmail.com>'
 
-* checking installed package size ... NOTE
-  installed size is  9.5Mb
-  sub-directories of 1Mb or more:
-    libs   7.8Mb
+Version contains large components (1.7.0.9000)
 
 
 Possibly mis-spelled words in DESCRIPTION:
@@ -36,6 +60,12 @@ I have reviewed these words and feel they are spelled correctly.
 'genlight' refers to an object of class adegenet::genlight.
 
 
+https://cran.r-project.org/web/checks/check_results_vcfR.html
+Additional issues:
+
+I believe I have addressed the WARNings and valgrind issue detected at CRAN.
+
+
 ## Downstream dependencies
 
 I have also run R CMD check on downstream dependencies of vcfR
@@ -43,13 +73,14 @@ All packages that I could install passed:
 
 devtools::revdep_check()
 
+With one exception:
+annovar
+https://CRAN.R-project.org/package=annovarR 
+
 Checked annovarR: 1 error  | 0 warnings | 0 notes
-Checked pcadapt : 0 errors | 0 warnings | 3 notes
 
-The ERROR from annovarR is below, I do not feel this is related to vcfR.
+I feel that this is not due to vcfR.
 
-ERROR: dependencies ‘RMySQL’, ‘AnnotationDbi’ are not available for package ‘annovarR’
-* removing ‘/tmp/Rtmp4bz1PA/R-lib/annovarR’
 
 ## Thank you CRAN Core Team!
 

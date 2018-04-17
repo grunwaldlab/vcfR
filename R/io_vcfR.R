@@ -18,7 +18,8 @@
 #' @param mask logical vector indicating rows to use.
 #' @param APPEND logical indicating whether to append to existing vcf file or write a new file.
 #' @param convertNA logical specifying to convert VCF missing data to NA.
-#' @param checkFile test if teh first line follows the VCF specification.
+#' @param checkFile test if the first line follows the VCF specification.
+#' @param check_keys logical determining if \code{check_keys()} is called to test if INFO and FORMAT keys are unique.
 #' 
 #' @param verbose report verbose progress.
 #'
@@ -107,6 +108,7 @@ read.vcfR <- function(file,
                       cols = NULL, 
                       convertNA = TRUE,
                       checkFile = TRUE,
+                      check_keys = TRUE,
                       verbose = TRUE){
 #  require(memuse)
   
@@ -160,14 +162,24 @@ read.vcfR <- function(file,
   vcf <- new(Class="vcfR")
 
   stats <- .vcf_stats_gz(file, nrows=nrows, skip = skip, verbose = as.integer(verbose) )
-  # stats should be a named vector containing "meta", "header", "variants", "columns".
+  # stats should be a named vector containing "meta", "header_line", "variants", "columns", and "last_line".
   # They should have been initialize to zero.
+  if( stats['columns'] > 0 & stats['last_line'] > 0 & stats['columns'] != stats['last_line']){
+    msg <- paste("Your file appears to have", stats['columns'], "header elements")
+    msg <- paste(msg, "and", stats['last_line'], "columns in the body.\n")
+    msg <- paste(msg, "This should never happen!")
+    stop(msg)
+  }
+  if( stats['columns'] == 0 & stats['last_line'] > 0 ){
+    stats['columns'] <- stats['last_line']
+  }
+  
   if(verbose == TRUE){
     cat("File attributes:")
     cat("\n")
     cat( paste("  meta lines:", stats['meta']) )
     cat("\n")
-    cat( paste("  header line:", stats['header']) )
+    cat( paste("  header_line:", stats['header_line']) )
     cat("\n")
     cat( paste("  variant count:", stats['variants']) )
     cat("\n")
@@ -179,8 +191,8 @@ read.vcfR <- function(file,
   if( stats['meta'] < 0 ){
     stop( paste("stats['meta'] less than zero:", stats['meta'], ", this should never happen.") )
   }
-  if( stats['header'] < 0 ){
-    stop( paste("stats['header'] less than zero:", stats['header'], ", this should never happen.") )
+  if( stats['header_line'] < 0 ){
+    stop( paste("stats['header_line'] less than zero:", stats['header_line'], ", this should never happen.") )
   }
   if( stats['variants'] < 0 ){
     stop( paste("stats['variants'] less than zero:", stats['variants'], ", this should never happen.") )
@@ -220,6 +232,11 @@ read.vcfR <- function(file,
     vcf@gt <- body[ , -c(1:8), drop=FALSE ]
   } else {
     vcf@gt <- matrix("a", nrow=0, ncol=0)
+  }
+  
+  # Check if keys in meta section are unique.
+  if( check_keys == TRUE ){
+    check_keys(vcf)
   }
   
   return(vcf)
