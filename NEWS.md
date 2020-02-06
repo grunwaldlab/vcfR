@@ -4,10 +4,31 @@ There is currently no plan to release vcfR 2.0.0.
 If and when this 'major' release occurs it will include changes that will break backward compatibility.
 At the present, this is simply a to-do list for ideas to include in the next major release.
 
+* `gzread` needs us to tell it a maximum number of bytes to read in, so we need to make an arbitrary guess.
+I think I encountered a situation where 4-96 was not enough so I've bumped it to 16,384 B.
 * Move 'FORMAT' column to its own slot. We can then cbind FORMAT and gt when passing to compiled code.
 This may have been addressed at 64a308ba50b9119108e8946737460de5997b805b by adding `samples` to vcfR method `[`.
 * In issue #92 (vcfR2genlight big data #92), JimWhiting91 has documented that `extract.gt()` could be greatly improved with multithreading. While he used `mclapply()` I do not feel this is the best solution because it does not work on Windows. I think a better solution would be [RCppParallel](https://rcppcore.github.io/RcppParallel/) because this should work on all CRAN platforms.
 
+
+# vcfR 1.10.0
+Released on CRAN 2020-02-06
+* Handled deprecated "dplyr::verb_" function in vcfR2tidy
+* Omitted unused elipses from proc.chromR()
+
+# vcfR 1.9.0
+Released on CRAN 2020-01-10
+* Changed class(x) == "matrix" to inherited(x, "matrix")
+* Changed license from `GPL` to `GPL-3` (#144).
+* `extract.haps()` reports the correct number of variants processed when verbose.
+* The square brackets ([]) handle @gt slots with no samples.
+* `vcfR2loci()` now has the option `return.alleles = FALSE`.
+* `vcfR2genind()` now has the option `retrun.alleles = FALSE`.
+* Error handling code moved into the C++ functions called by read.vcfR so that errors are thrown earlier when reading a VCF. read.vcfR no longer checks that a file is readable first, which solves issues sometimes seen with shared files. (Issue #109, reported and fixed by @NikNakk).
+* `extract.haps()` did not include the parameter `return.alleles = TRUE` in it's call to `extract.gt()` in the haploid branch of the function. This parameter has now been added. This also affects `vcfR2DNAbin()` which calls this function.
+* `vcfR2genlight()` includes the parameter `...` to pass parameters to `adegenet::df2genind()`.
+* `is.indel()` returns logical vector to identify indels.
+* gt.to.popsum now handles genotypes that include some, but not all, missing alleles.
 
 # vcfR 1.8.0
 Released on CRAN 2018-04-17

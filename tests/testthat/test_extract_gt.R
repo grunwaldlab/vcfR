@@ -5,11 +5,11 @@
 library(vcfR)
 context("extract.gt functions")
 
-##### ##### ##### ##### #####
 #
-# extract.gt tests
 #
-##### ##### ##### ##### #####
+# extract.gt tests ----
+#
+#
 
 
 test_that("gt is a matrix",{
@@ -45,11 +45,11 @@ test_that("extract.gt extract parameter works",{
 })
 
 
-##### ##### ##### ##### #####
 #
-# extract.gt missing data.
 #
-##### ##### ##### ##### #####
+# extract.gt missing data. ----
+#
+#
 
 
 test_that("extract.gt converts missing GT to NA",{
@@ -82,11 +82,11 @@ test_that("extract.gt convertNA = FALSE works",{
 
 })
 
-##### ##### ##### ##### #####
 #
-# extract.gt return.alleles tests
 #
-##### ##### ##### ##### #####
+# extract.gt return.alleles tests ----
+#
+#
 
 
 test_that("extract.gt return.alleles works #1",{
@@ -145,11 +145,11 @@ test_that("extract.gt return.alleles works for multiallelic variants",{
 
 
 
-##### ##### ##### ##### #####
 #
-# extract.haps tests
 #
-##### ##### ##### ##### #####
+# extract.haps tests ----
+#
+#
 
 
 test_that("extract_haps compiled code works",{
@@ -217,12 +217,34 @@ test_that("extract_haps unphased_as_NA works",{
   expect_equal(sum(is.na(haps)), 14)
 })
 
+test_that("extract_haps works on haploid data",{
+  data(vcfR_test)
+  
+  # Haploidize test data
+  my_non_gt <- extract.gt(vcfR_test, extract = FALSE)
+  my_gt <- extract.gt(vcfR_test)
+  my_gt <- unlist(lapply(strsplit(my_gt, split = "[/|]"), function(x){x[1]}))
+  # https://stackoverflow.com/a/35589023
+  my_non_gt <- paste(my_gt, my_non_gt, sep = ":")
+  dim(my_non_gt) <- dim(vcfR_test@gt[,-1])
+  vcfR_test@gt[,-1] <- my_non_gt
+  
+  my_alleles <- extract.haps(vcfR_test)
+  expect_equal(grep("[ACGT]", my_alleles, invert = TRUE), integer(0))
+})
 
-##### ##### ##### ##### #####
+
+test_that("extract_haps works on haploid data",{
+  data(vcfR_test)
+  my_out <- capture.output(my_haps <- extract.haps(vcfR_test))
+  expect_identical(my_out, "\rVariant 0 processed\rVariant 5 processed")
+})
+
 #
-# extract.indels tests
 #
-##### ##### ##### ##### #####
+# extract.indels tests ----
+#
+#
 
 
 test_that("extract.indels works",{
@@ -248,11 +270,11 @@ test_that("extract.indels works, <NON_REF>",{
 })
 
 
-##### ##### ##### ##### #####
 #
-# gt2alleles tests
 #
-##### ##### ##### ##### #####
+# gt2alleles tests ----
+#
+#
 
 
 #data(vcfR_example)
@@ -282,11 +304,11 @@ test_that("gt2alleles works",{
 
 
 
-##### ##### ##### ##### #####
 #
 #
+# extract_gt_to_CM ----
 #
-##### ##### ##### ##### #####
+#
 
 
 
@@ -308,14 +330,12 @@ test_that("extract_gt_to_CM compiled code works",{
 })
 
 
-##### ##### ##### ##### #####
 
-
-##### ##### ##### ##### #####
 #
-# extract.info tests
 #
-##### ##### ##### ##### #####
+# extract.info tests ----
+#
+#
 
 
 test_that("extract.info handles missing elements",{
@@ -332,5 +352,5 @@ test_that("extract.info handles missing elements",{
 })
 
 
-##### ##### ##### ##### #####
+####
 # EOF.

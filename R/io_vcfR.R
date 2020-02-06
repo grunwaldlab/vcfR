@@ -97,7 +97,7 @@
 #' setwd( orig_dir )
 #' 
 #' 
-#' @rdname io_vcfR
+# ' @rdname io_vcfR
 #' @aliases read.vcfR
 #' @export
 #' 
@@ -137,13 +137,6 @@ read.vcfR <- function(file,
   # gzopen does not appear to deal well with tilde expansion.
   if( grepl("^~", file) ){
     file <- path.expand(file)
-  }
-  
-  if(file.access(file, mode = 0) != 0){
-    stop(paste("File:", file, "does not appear to exist!"))
-  }
-  if(file.access(file, mode = 4) != 0){
-    stop(paste("File:", file, "appears to exist but is not readable!"))
   }
   
   # Test that this is a VCF file.

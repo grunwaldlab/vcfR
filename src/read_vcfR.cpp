@@ -2,15 +2,22 @@
 #include <Rcpp.h>
 #include <zlib.h>
 #include "vcfRCommon.h"
+#include <sstream>
 
 //using namespace Rcpp;
+// https://www.lemoda.net/c/gzfile-read/
+
 
 // Number of records to report progress at.
 const int nreport = 1000;
 
 /* Size of the block of memory to use for reading. */
-#define LENGTH 0x1000 // hexadecimel for 4096.
+// #define LENGTH 0x1000 // hexadecimel for 4096.
+// #define LENGTH 0x2000 // hexadecimel for 8192.
+#define LENGTH 4000 // hexadecimel for 16384 or 16.384 KB.
 
+//#define LENGTH 2710 // hexadecimel for 10,000 or 10 KB.
+// #define LENGTH 4E20 // hexadecimel for 20,000 or 20 KB.
 
 /*  Helper functions */
 
@@ -20,6 +27,7 @@ Processes lines from vcf files.
 Counts meta (^##), header (^#C), columns in the header and remaining lines.
 */
 void stat_line(Rcpp::NumericVector stats, std::string line){
+//  Rcpp::Rcout << "    In stat_line." << std::endl;
   if(line[0] == '#' && line[1] == '#'){
     // Meta
     stats(0)++;
@@ -34,7 +42,13 @@ void stat_line(Rcpp::NumericVector stats, std::string line){
   } else {
     // Variant
     stats(2)++;
+    // Count columns
+    std::vector < std::string > col_vec;
+    char col_split = '\t'; // Must be single quotes!
+    vcfRCommon::strsplit(line, col_vec, col_split);
+    stats(4) = col_vec.size();
   }
+//  Rcpp::Rcout << "    Leaving stat_line." << std::endl;
 }
 
 
@@ -64,20 +78,23 @@ Rcpp::NumericVector vcf_stats_gz(std::string x, int nrows = -1, int skip = 0, in
   
   gzFile file;
   file = gzopen (x.c_str(), "r");
-  if (! file) {
-    Rcpp::Rcerr << "gzopen of " << x << " failed: " << strerror (errno) << ".\n";
-    return stats;
-  }
 
+  if (! file) {
+    Rcpp::stop("gzopen of " + x + " failed: " + strerror (errno));
+  }
+//  Rcpp::Rcout << "Made it here." << std::endl;
+  
   // Scroll through buffers.
   std::string lastline = "";
   while (1) {
+//    Rcpp::Rcout << "Made it here." << std::endl;
     Rcpp::checkUserInterrupt();
     int err;
     int bytes_read;
     char buffer[LENGTH];
     bytes_read = gzread (file, buffer, LENGTH - 1);
     buffer[bytes_read] = '\0';
+//    Rcpp::Rcout << "Buffer read in." << std::endl;
 
     std::string mystring(reinterpret_cast<char*>(buffer));  // Recast buffer as a string.
     mystring = lastline + mystring;
@@ -85,46 +102,48 @@ Rcpp::NumericVector vcf_stats_gz(std::string x, int nrows = -1, int skip = 0, in
     
     char split = '\n'; // Must be single quotes!
     vcfRCommon::strsplit(mystring, svec, split);
-        
+
     // Scroll through lines derived from the buffer.
     unsigned int i = 0;
     for(i=0; i < svec.size() - 1; i++){
-//      Rcpp::Rcout << svec[i] << "\n";
       stat_line(stats, svec[i]);
     }
-    // Manage the last line.
-    lastline = svec[svec.size() - 1];
-
+      
+    // If we've specified a maximum number of rows and we've hit it,
+    // we need o bail out.
     if( max_rows > 0 && stats(2) > max_rows ){
       gzclose (file);
       stats(2) = max_rows;
       return stats;
     }
     
-
+    // Manage the last line.
+    lastline = svec[svec.size() - 1];
+//    Rcpp::Rcout << "  Last line managed." << std::endl;
+    
     // Check for EOF or errors.
+//    Rcpp::Rcout << "  Check for errors." << std::endl;
     if (bytes_read < LENGTH - 1) {
       if ( gzeof (file) ) {
-        lastline = svec[svec.size() - 2];
-//          Rcpp::Rcout << "svec.back: " << lastline << "\n";
-        std::vector < std::string > col_vec;
-        char col_split = '\t'; // Must be single quotes!
-        vcfRCommon::strsplit(lastline, col_vec, col_split);
-        stats(4) = col_vec.size();
+//        Rcpp::Rcout << "    Found EOF." << std::endl;
+//        lastline = svec[svec.size() - 1];
         break;
       }
       else {
+//        Rcpp::Rcout << "    Found error_string." << std::endl;
         const char * error_string;
         error_string = gzerror (file, & err);
         if (err) {
-          Rcpp::Rcerr << "Error: " << error_string << ".\n";
-          return stats;
+          Rcpp::stop(std::string("Error: ") + error_string + ".");
         }
       }
     }
+//    Rcpp::Rcout << "  End check for errors." << std::endl;
   }
   gzclose (file);
 
+//  Rcpp::Rcout << "Made it to the end of vcf_stats_gz" << std::endl;
+//  stats(4) = stats(1) + stats(2);
   return stats;
 }
 
@@ -144,8 +163,7 @@ Rcpp::StringVector read_meta_gz(std::string x, Rcpp::NumericVector stats, int ve
   gzFile file;
   file = gzopen (x.c_str(), "r");
   if (! file) {
-    Rcpp::Rcerr << "gzopen of " << x << " failed: " << strerror (errno) << ".\n";
-    return Rcpp::StringVector(1);
+    Rcpp::stop("gzopen of " + x + " failed: " + strerror (errno) + ".");
   }
 
   // Scroll through buffers.
@@ -192,8 +210,7 @@ Rcpp::StringVector read_meta_gz(std::string x, Rcpp::NumericVector stats, int ve
         const char * error_string;
         error_string = gzerror (file, & err);
         if (err) {
-          Rcpp::Rcerr << "Error: " << error_string << ".\n";
-          return Rcpp::StringVector(1);
+          Rcpp::stop(std::string("Error: ") + error_string + ".");
         }
       }
     }
@@ -329,8 +346,7 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
   } else if ( ( nrows != -1 ) & ( skip > 0) ){
     // nrows = nrows;
   } else {
-    Rcpp::Rcerr << "Failed to calculate return matrix geometry.";
-    return na_matrix;
+    Rcpp::stop("Failed to calculate return matrix geometry.");
   }
   
 
@@ -341,10 +357,11 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
   // }
   
   if( nrows > INT_MAX ){
-    Rcpp::Rcerr << "Requested a matrix of " << nrows << " rows." << std::endl;
-    Rcpp::Rcerr << "This exceeds INT_MAX, which is " << INT_MAX << "." << std::endl;
-    Rcpp::Rcerr << "I suggest you attempt to read in a portion of the file using the options 'nrows' and 'skip'." << std::endl;
-    return na_matrix;
+    std::stringstream ss;
+    ss << "Requested a matrix of " << nrows << " rows." << std::endl;
+    ss << "This exceeds INT_MAX, which is " << INT_MAX << "." << std::endl;
+    ss << "I suggest you attempt to read in a portion of the file using the options 'nrows' and 'skip'." << std::endl;
+    Rcpp::stop(ss.str());
   }
   
   Rcpp::CharacterMatrix gt( nrows, cols.size() );
@@ -375,7 +392,7 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
   gzFile file;
   file = gzopen (x.c_str(), "r");
   if (! file) {
-    Rcpp::Rcerr << "gzopen of " << x << " failed: " << strerror (errno) << ".\n";
+    Rcpp::stop("gzopen of " + x + " failed: " + strerror (errno) + ".");
     return na_matrix;
   }
 
@@ -491,8 +508,7 @@ Rcpp::CharacterMatrix read_body_gz(std::string x,
         const char * error_string;
         error_string = gzerror (file, & err);
         if (err) {
-          Rcpp::Rcerr << "Error: " << error_string << ".\n";
-          return na_matrix;
+          Rcpp::stop(std::string("Error: ") + error_string + ".");
         }
       }
     }

@@ -24,7 +24,7 @@
 #' 
 #' @export
 is.polymorphic <- function(x, na.omit=FALSE){
-  if(class(x) != "vcfR"){
+  if( !inherits(x, "vcfR") ){
     stop("Expected an object of class vcfR")
   }
   x <- extract.gt(x)
@@ -46,6 +46,11 @@ is.polymorphic <- function(x, na.omit=FALSE){
 #' The function \strong{is_bialleleic} returns a vector of logicals indicating whether a variant is biallelic.
 #' Some analyses or downstream analyses only work with biallelic loci.
 #' This function can help manage this.
+#' 
+#' Note that \strong{is_bialleleic} queries the ALT column in the fix slot to count alleles.
+#' If you remove samples from the gt slot you may invalidate the information in the fix slot.
+#' For example, if you remove the samples with the alternate allele you will make the position invariant and this function will provide inaccurate information.
+#' So use caution if you've made many modifications to your data.
 #' 
 #' @export
 is.biallelic <- function(x){

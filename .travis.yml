@@ -3,7 +3,7 @@
 language: r
 r:
     - release
-#    - devel
+    - devel
 
 cache: packages
 warnings_are_errors: true
@@ -18,6 +18,8 @@ addons:
     packages:
       - gcc-4.9
       - g++-4.9
+      - libudunits2-dev
+      - libgdal1-dev
 
 before_install: |
   mkdir ~/.R

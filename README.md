@@ -10,9 +10,6 @@ On CRAN:
 Depsy:
 [![Research software impact](http://depsy.org/api/package/cran/vcfR/badge.svg)](http://depsy.org/package/r/vcfR)
 
-RDocumentation:
- [![Rdoc](http://www.rdocumentation.org/badges/version/vcfR)](http://www.rdocumentation.org/packages/vcfR) 
-
 Travis-CI (Ubuntu Linux):
 [![Travis-CI Build Status](https://travis-ci.org/knausb/vcfR.png?branch=master)](https://travis-ci.org/knausb/vcfR)
 
@@ -60,9 +57,16 @@ If you think you've found a bug, please see [reporting an issue](https://knausb.
 
 ## Publication
 
+### vcfR articles
+
 Knaus, Brian J., and Niklaus J. Grunwald. 2017. VCFR: a package to manipulate and visualize variant call format data in R. Molecular Ecology Resources 17(1):44-53. http://dx.doi.org/10.1111/1755-0998.12549.
 
 Knaus, Brian J., and Niklaus J. Grunwald. 2016. VcfR: an R package to manipulate and visualize VCF format data. bioRxiv: 041277. http://dx.doi.org/10.1101/041277.
+
+
+### Copy number variation article
+
+Knaus, Brian, and Niklaus J. Grünwald. 2018. Inferring variation in copy number using high throughput sequencing data in R. Frontiers in Genetics 9: 123. http://dx.doi.org/10.3389/fgene.2018.00123.
 
 
 ## Download
@@ -129,7 +133,6 @@ If you know of a software that I have not included on this list, particularly if
 * [GATK MuTect2](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php)
 * [GATK GenotypeGVCFs](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_variantutils_GenotypeGVCFs.php)
 * [LoFreq](http://csb5.github.io/lofreq/)
-* [Platypus](http://www.well.ox.ac.uk/platypus)
 * [Samtools](http://www.htslib.org/)
 * [VarScan2](http://dkoboldt.github.io/varscan/)
 
